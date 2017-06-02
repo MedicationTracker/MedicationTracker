@@ -16,4 +16,13 @@ public class ConsumptionInstruction {
         this.dosage = dosage;
         this.remarks = remarks;
     }
+
+    /*
+    getters and setters
+     */
+    public String getDosage() { return this.dosage; }
+    public void setDosage(String dosage) { this.dosage = dosage; }
+
+    public String getRemarks() { return this.remarks; }
+    public void setRemarks(String remarks) { this.remarks = remarks; }
 }

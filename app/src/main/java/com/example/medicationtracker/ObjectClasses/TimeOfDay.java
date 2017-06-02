@@ -5,10 +5,13 @@ package com.example.medicationtracker.ObjectClasses;
  */
 
 public class TimeOfDay {
-    int hour;
-    int minute;
+    String hour; //2 char string e.g. "08"
+    String minute;
 
-    public TimeOfDay(int hour, int minute) {
+    /*
+    future: include check for validity of String parameters
+     */
+    public TimeOfDay(String hour, String minute) {
         this.hour = hour;
         this.minute = minute;
     }
@@ -16,9 +19,11 @@ public class TimeOfDay {
     /*
     getters and setters
      */
-    public int getHour() { return this.hour; }
-    public void setHour(int hour) { this.hour = hour; }
+    public String getHour() { return this.hour; }
+    public void setHour(String hour) { this.hour = hour; }
 
-    public int getMinute() { return this.minute; }
-    public void setMinute(int minute) { this.minute = minute; }
+    public String getMinute() { return this.minute; }
+    public void setMinute(String minute) { this.minute = minute; }
+
+    public String toString() { return hour + minute; }
 }
