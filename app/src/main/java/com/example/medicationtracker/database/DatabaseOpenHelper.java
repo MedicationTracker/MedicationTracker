@@ -7,8 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 
-import com.example.medicationtracker.ObjectClasses.ConsumptionInstruction;
-import com.example.medicationtracker.ObjectClasses.Drug;
 import com.example.medicationtracker.ObjectClasses.Prescription;
 import java.util.ArrayList;
 

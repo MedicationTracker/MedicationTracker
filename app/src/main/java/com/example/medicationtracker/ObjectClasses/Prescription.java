@@ -23,6 +23,11 @@ public class Prescription {
     Drug drug;
     ConsumptionInstruction consumption_instruction;
 
+    // default values
+    public Prescription() {
+
+    }
+
     public Prescription(GregorianCalendar start_date, int interval, ArrayList<TimeOfDay> timings,
                          Drug drug, ConsumptionInstruction ci) {
         this.start_date = start_date;
