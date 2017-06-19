@@ -8,10 +8,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 
 import com.example.medicationtracker.ObjectClasses.Prescription;
-import java.util.ArrayList;
+import java.util.*;
+
+import static com.example.medicationtracker.Utility.getBytes;
+import static com.example.medicationtracker.Utility.getImage;
 
 
-import static com.example.medicationtracker.Utility.*;
+//import static com.example.medicationtracker.Utility.*;
 
 /**
  * Created by Jia Hao on 5/31/2017.
