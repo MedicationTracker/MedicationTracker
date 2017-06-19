@@ -12,6 +12,7 @@ import java.util.Calendar;
 public class MainActivity extends AppCompatActivity {
 
     // instantiate variables
+    Button btn_meds;
     AlarmManager alarm_manager;
     TimePicker time_picker;
     Calendar calendar;
@@ -21,10 +22,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         // assign variables
+
         alarm_manager = (AlarmManager) getSystemService(ALARM_SERVICE);
         time_picker = (TimePicker) findViewById(R.id.timePicker);
         calendar = Calendar.getInstance();
+        btn_meds = (Button) findViewById(R.id.button_medications);
+        btn_meds.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickMedications(v);
+            }
+        });
 
         // initialise buttons
         Button set_time = (Button) findViewById(R.id.set_time);
@@ -37,6 +48,10 @@ public class MainActivity extends AppCompatActivity {
                 //Toast.makeText(this, "Hi", Toast.LENGTH_SHORT);
             }
             });
+
+    }
+
+    public void onClickMedications(View v) {
 
     }
 }
