@@ -22,14 +22,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
         // assign variables
-
         alarm_manager = (AlarmManager) getSystemService(ALARM_SERVICE);
         time_picker = (TimePicker) findViewById(R.id.timePicker);
         calendar = Calendar.getInstance();
-        btn_meds = (Button) findViewById(R.id.button_medications);
+        btn_meds = (Button) findViewById(R.id.my_medications);
         btn_meds.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

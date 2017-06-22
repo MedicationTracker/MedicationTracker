@@ -1,44 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.example.medicationtracker.MainActivity">
+    android:layout_height="wrap_content"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp"
+    >
 
+        // create my medications button
     <Button
-        android:id="@+id/button_medications"
-        android:layout_width="0dp"
+        android:id="@+id/my_medications"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="5dp"
         android:text="My Medications"
         android:onClick="onClickMedications"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="8dp"
-        app:layout_constraintHorizontal_bias="0.0" />
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        />
 
-    <TimePicker
-        android:id="@+id/timePicker"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="100dp" />
-
+    // create my history button
     <Button
-        android:id="@+id/set_time"
+        android:id="@+id/my_history"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Button"
-        tools:layout_editor_absoluteX="31dp"
-        tools:layout_editor_absoluteY="436dp" />
+        android:text="My History"
+        android:layout_below="@+id/my_medications"
+        android:layout_centerHorizontal="true"
+        />
 
-    <Button
-        android:id="@+id/unset_time"
+    // create next appointment text
+    <EditText
+        android:id="@+id/next_appointment"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Button"
-        tools:layout_editor_absoluteX="264dp"
-        tools:layout_editor_absoluteY="436dp" />
-</android.support.constraint.ConstraintLayout>
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/my_history"
+        android:inputType="textPersonName"
+        android:text="Next appointment in :" />
+
+    // create emergency call button
+    <Button
+        android:id="@+id/emergency_call"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/next_appointment"
+        android:text="Emergency Call" />
+
+    // create settings button
+    <item
+        android:id="@+id/settings"
+        android:title="Settings"
+        android:showAsAction="always"
+    />
+
+</RelativeLayout>
