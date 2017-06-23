@@ -1,4 +1,4 @@
-package com.example.medicationtracker.Dialogs;
+package com.example.medicationtracker.dialogs;
 
 import android.app.DialogFragment;
 import android.app.TimePickerDialog;
@@ -16,7 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-import com.example.medicationtracker.ObjectClasses.TimeOfDay;
+import com.example.medicationtracker.objects.TimeOfDay;
 import com.example.medicationtracker.R;
 
 import java.util.ArrayList;

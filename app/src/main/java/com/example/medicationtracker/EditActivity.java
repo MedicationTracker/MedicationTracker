@@ -16,9 +16,9 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.example.medicationtracker.Dialogs.TimeListDialog;
-import com.example.medicationtracker.ObjectClasses.Prescription;
-import com.example.medicationtracker.ObjectClasses.TimeOfDay;
+import com.example.medicationtracker.dialogs.TimeListDialog;
+import com.example.medicationtracker.objects.Prescription;
+import com.example.medicationtracker.objects.TimeOfDay;
 import com.example.medicationtracker.database.DatabaseOpenHelper;
 
 import java.text.ParseException;

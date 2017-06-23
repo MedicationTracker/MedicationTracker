@@ -3,13 +3,11 @@ package com.example.medicationtracker;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-import com.example.medicationtracker.ObjectClasses.TimeOfDay;
+import com.example.medicationtracker.objects.TimeOfDay;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
-
-import static android.R.attr.bitmap;
 
 /**
  * Utility class used to store all (static) utility methods

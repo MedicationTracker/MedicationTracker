@@ -1,4 +1,4 @@
-package com.example.medicationtracker.ObjectClasses;
+package com.example.medicationtracker.objects;
 
 import android.app.Service;
 import android.content.Intent;

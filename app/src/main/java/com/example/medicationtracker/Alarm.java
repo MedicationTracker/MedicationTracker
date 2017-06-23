@@ -11,7 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TimePicker;
 
-import com.example.medicationtracker.ObjectClasses.Alarm_Receiver;
+import com.example.medicationtracker.receivers.AlarmReceiver;
 
 /**
  * Created by Ryan on 21/6/2017.
@@ -36,7 +36,7 @@ public class Alarm extends Activity {
             alarm_manager = (AlarmManager) getSystemService(ALARM_SERVICE);
             time_picker = (TimePicker) findViewById(R.id.timePicker);
             final Calendar calendar = Calendar.getInstance();
-            final Intent alarm_receiver_intent = new Intent(this.context, Alarm_Receiver.class);
+            final Intent alarm_receiver_intent = new Intent(this.context, AlarmReceiver.class);
 
             // initialise alarm buttons
             Button set_time = (Button) findViewById(R.id.set_time);

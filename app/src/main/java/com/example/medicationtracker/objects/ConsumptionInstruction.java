@@ -1,4 +1,4 @@
-package com.example.medicationtracker.ObjectClasses;
+package com.example.medicationtracker.objects;
 
 /**
  * Created by Jia Hao on 5/31/2017.

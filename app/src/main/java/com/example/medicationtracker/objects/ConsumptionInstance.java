@@ -1,9 +1,8 @@
-package com.example.medicationtracker.ObjectClasses;
+package com.example.medicationtracker.objects;
 
 
 import android.support.annotation.NonNull;
 
-import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 /**
@@ -11,6 +10,7 @@ import java.util.GregorianCalendar;
  */
 
 public class ConsumptionInstance implements Comparable {
+
     GregorianCalendar consumption_time;
     Drug drug;
     ConsumptionInstruction consumption_instruction;

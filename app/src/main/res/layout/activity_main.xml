@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:paddingTop="16dp"
-    android:paddingBottom="16dp"
-    >
+    android:paddingBottom="16dp">
 
         // create my medications button
     <Button
@@ -49,11 +48,5 @@
         android:layout_below="@+id/next_appointment"
         android:text="Emergency Call" />
 
-    // create settings button
-    <item
-        android:id="@+id/settings"
-        android:title="Settings"
-        android:showAsAction="always"
-    />
 
 </RelativeLayout>

@@ -1,4 +1,4 @@
-package com.example.medicationtracker.ObjectClasses;
+package com.example.medicationtracker.objects;
 
 /**
  Class to store a time in 24 hour format

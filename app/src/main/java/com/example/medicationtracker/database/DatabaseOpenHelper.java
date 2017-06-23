@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 
-import com.example.medicationtracker.ObjectClasses.Prescription;
+import com.example.medicationtracker.objects.Prescription;
 import java.util.*;
 
 import static com.example.medicationtracker.Utility.getBytes;

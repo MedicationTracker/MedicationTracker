@@ -3,6 +3,8 @@ package com.example.medicationtracker;
 import android.app.AlarmManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TimePicker;
@@ -52,5 +54,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClickMedications(View v) {
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.mymenu,menu);
+        return true;
     }
 }
