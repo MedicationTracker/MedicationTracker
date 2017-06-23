@@ -12,7 +12,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,18 +19,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".PrescriptionListActivity" />
-
         <activity android:name=".EditActivity" />
+        <activity android:name=".Alarm" />
 
-        <activity android:name=".Alarm"></activity>
+        <receiver android:name=".receivers.AlarmReceiver" />
 
-        <reciever android:name=".Alarm_Receiver"/>
-        
-        <service android:name=".Alarm_Ringtone"
-            android:enabled="true"></service>
-
+        <activity android:name=".AlarmScreen"
+            android:launchMode="singleTop">
+        </activity>
     </application>
 
 </manifest>

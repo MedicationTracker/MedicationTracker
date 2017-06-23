@@ -20,6 +20,10 @@ public final class Utility {
      */
     private Utility() {}
 
+    public static void zeroToMinute(Calendar c) {
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+    }
 
     public static String CalendarToDateString(Calendar c) {
         int day = c.get(Calendar.DAY_OF_MONTH);

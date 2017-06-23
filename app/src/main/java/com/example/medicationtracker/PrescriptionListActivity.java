@@ -192,7 +192,7 @@ public class PrescriptionListActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Prescription new_p;
+        Prescription new_p = null;
 
         switch (requestCode) {
             case REQUEST_CODE_ADD:
@@ -212,6 +212,12 @@ public class PrescriptionListActivity extends AppCompatActivity {
                 break;
         }
 
+        // unset and reset the alarms
+        if (new_p != null) {
+            //cancelAlarms(new_p);
+            // override old alarms if any
+            setAlarms(new_p);
+        }
         updateListView();
     }
 
@@ -224,25 +230,43 @@ public class PrescriptionListActivity extends AppCompatActivity {
         }
     }
 
+    /*
+     * creates a PendingIntent meant for AlarmManager
+     * has 2 pieces of information inside:
+     * a long request code
+     * a string for the timing to be displayed
+     *
+     * Pre-Cond:
+     * request_code is casted to int
+     *
+     * maybe change String timing to Calendar??
+     */
+    public static PendingIntent getAlarmIntent(Context ctx, long request_code, String timing) {
+        Intent intent = new Intent(ctx, AlarmReceiver.class);
+        intent.putExtra("REQUEST_CODE", request_code);
+        intent.putExtra("TIMING_KEY", timing);
+        return PendingIntent.getBroadcast(ctx, (int) request_code, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
 
     /*
      * Sets an alarm for a ConsumptionInstance.
      * The request code of the PendingIntent is the ID
      *
-     * Pre-cond:
-     * ID of ConsumptionInstance is not larger than max integer size
+     * WARNING: seems to have precision error somehow
      */
     private void setAlarm(ConsumptionInstance instance) {
         Calendar cal = instance.getConsumptionTime();
+
+        String timing = formatInt(cal.get(Calendar.HOUR_OF_DAY), 2) + formatInt(cal.get(Calendar.MINUTE), 2);
         long alarm_millis = cal.getTimeInMillis();
         long request_code = instance.getId();
 
         // set Broadcast at specified time with request_code
-        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
-        intent.putExtra("REQUEST_CODE", request_code);
-        PendingIntent pending = PendingIntent.getBroadcast(this, (int) request_code, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        PendingIntent pending = getAlarmIntent(this, request_code, timing);
         AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
         am.setExact(AlarmManager.RTC_WAKEUP, alarm_millis, pending);
+
+        Log.d("tag111", "alarm set for " + timing);
     }
 
     /*
@@ -266,12 +290,12 @@ public class PrescriptionListActivity extends AppCompatActivity {
      */
     private void cancelAlarms(Prescription p) {
         // create exact same pendingIntent
-        Intent intent = new Intent(this, AlarmReceiver.class);
-        intent.putExtra("REQUEST_CODE", p.getId());
-        PendingIntent pending = PendingIntent.getBroadcast(this, (int) p.getId(), intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        PendingIntent pending = getAlarmIntent(this, p.getId(), "0000");
         AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-        // cancel
+
         am.cancel(pending);
+
+        Log.d("tag111", "alarm canceled for " + p.getId());
     }
 
     public void onSetAlarmsClicked(View v) {

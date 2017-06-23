@@ -81,7 +81,7 @@ public class Prescription {
             }
             temp.add(Calendar.DAY_OF_MONTH, skip*this.interval); // add skip
 
-            result.add(new ConsumptionInstance(temp, this.drug, this.consumption_instruction));
+            result.add(new ConsumptionInstance(this.id, temp, this.drug, this.consumption_instruction));
         }
 
         return result;

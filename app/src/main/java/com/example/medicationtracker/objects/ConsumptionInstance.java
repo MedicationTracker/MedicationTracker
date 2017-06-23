@@ -10,12 +10,13 @@ import java.util.GregorianCalendar;
  */
 
 public class ConsumptionInstance implements Comparable {
-
+    long id;
     GregorianCalendar consumption_time;
     Drug drug;
     ConsumptionInstruction consumption_instruction;
 
-    public ConsumptionInstance(GregorianCalendar consumption_time, Drug drug, ConsumptionInstruction ci) {
+    public ConsumptionInstance(long id, GregorianCalendar consumption_time, Drug drug, ConsumptionInstruction ci) {
+        this.id = id;
         this.consumption_time = consumption_time;
         this.drug = drug;
         this.consumption_instruction = ci;
@@ -24,6 +25,7 @@ public class ConsumptionInstance implements Comparable {
     /*
     getters
      */
+    public long getId() { return this.id; }
     public GregorianCalendar getConsumptionTime() { return this.consumption_time; }
     public Drug getDrug() { return this.drug; }
     public ConsumptionInstruction getConsumptionInstruction() { return this.consumption_instruction; }

@@ -203,6 +203,7 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
         int interval = Integer.parseInt(et_frequency.getText().toString());
         String timings = et_timings.getText().toString();
         GregorianCalendar c = (GregorianCalendar) date_picker_calendar.clone();
+        zeroToMinute(c);
 
         if(!isEditing) {
             // activity was started by ADD new drug, so add new drug

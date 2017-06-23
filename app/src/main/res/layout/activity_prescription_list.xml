@@ -39,4 +39,15 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
+    <Button
+        android:id="@+id/btn_set_alarms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="8dp"
+        android:onClick="onSetAlarmsClicked"
+        android:text="SET ALARMS"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/btn_add" />
+
 </android.support.constraint.ConstraintLayout>
