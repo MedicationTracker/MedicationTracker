@@ -1,14 +1,16 @@
 package com.example.medicationtracker;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
@@ -16,31 +18,24 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.medicationtracker.ObjectClasses.ConsumptionInstance;
-import com.example.medicationtracker.ObjectClasses.ConsumptionInstruction;
-import com.example.medicationtracker.ObjectClasses.Drug;
-import com.example.medicationtracker.ObjectClasses.Prescription;
-import com.example.medicationtracker.ObjectClasses.TimeOfDay;
+import com.example.medicationtracker.objects.ConsumptionInstance;
+import com.example.medicationtracker.objects.ConsumptionInstruction;
+import com.example.medicationtracker.objects.Drug;
+import com.example.medicationtracker.objects.Prescription;
+import com.example.medicationtracker.objects.TimeOfDay;
 import com.example.medicationtracker.database.DatabaseOpenHelper;
+import com.example.medicationtracker.receivers.AlarmReceiver;
 
-import org.w3c.dom.Text;
-
-import java.lang.reflect.Array;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import static android.R.attr.id;
 import static android.media.CamcorderProfile.get;
-import static com.example.medicationtracker.R.id.iv_delete;
-import static com.example.medicationtracker.R.id.iv_edit;
-import static com.example.medicationtracker.R.id.iv_thumbnail;
-import static com.example.medicationtracker.R.id.tv_dosage;
-import static com.example.medicationtracker.R.id.tv_remarks;
-import static com.example.medicationtracker.R.id.tv_timing;
 import static com.example.medicationtracker.Utility.formatInt;
+import static com.example.medicationtracker.Utility.zeroToMinute;
 
 public class PrescriptionListActivity extends AppCompatActivity {
     public static final String EXTRA_KEY_ID = "ID";
@@ -156,6 +151,8 @@ public class PrescriptionListActivity extends AppCompatActivity {
         db.deletePrescription(p);
         db.close();
 
+        cancelAlarms(p);
+
         ArrayAdapter<Prescription> adapter = (ArrayAdapter<Prescription>) lv_prescriptions.getAdapter();
         adapter.remove(p);
         adapter.notifyDataSetChanged();
@@ -226,6 +223,72 @@ public class PrescriptionListActivity extends AppCompatActivity {
             ((CIAdapter) adapter).notifyDataSetChanged();
         }
     }
+
+
+    /*
+     * Sets an alarm for a ConsumptionInstance.
+     * The request code of the PendingIntent is the ID
+     *
+     * Pre-cond:
+     * ID of ConsumptionInstance is not larger than max integer size
+     */
+    private void setAlarm(ConsumptionInstance instance) {
+        Calendar cal = instance.getConsumptionTime();
+        long alarm_millis = cal.getTimeInMillis();
+        long request_code = instance.getId();
+
+        // set Broadcast at specified time with request_code
+        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+        intent.putExtra("REQUEST_CODE", request_code);
+        PendingIntent pending = PendingIntent.getBroadcast(this, (int) request_code, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+        am.setExact(AlarmManager.RTC_WAKEUP, alarm_millis, pending);
+    }
+
+    /*
+     * Starts the alarm cycle for this prescription
+     *
+     * Pre-conditions:
+     * Prescription must have a valid set of ConsumptionInstances
+     */
+    private void setAlarms(Prescription p) {
+        ArrayList<ConsumptionInstance> instances = p.generateConsumptionInstances(0);
+        if (instances.size() > 0) { // must have at least 1 ConsumptionInstances
+            ConsumptionInstance first_instance = instances.get(0);
+            setAlarm(first_instance);
+        } else {
+            Log.e("error", "Error in setAlarms: empty consumption instances");
+        }
+    }
+
+    /*
+     * Cancels the alarm cycle for this prescription
+     */
+    private void cancelAlarms(Prescription p) {
+        // create exact same pendingIntent
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        intent.putExtra("REQUEST_CODE", p.getId());
+        PendingIntent pending = PendingIntent.getBroadcast(this, (int) p.getId(), intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+        // cancel
+        am.cancel(pending);
+    }
+
+    public void onSetAlarmsClicked(View v) {
+        Toast.makeText(this, "alarms set", Toast.LENGTH_SHORT).show();
+
+        for(Prescription p : this.prescriptions) {
+            setAlarms(p);
+        }
+    }
+
+
+
+
+
+
+
+
 
     public ArrayList<Prescription> getTestList() {
         Bitmap img = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
