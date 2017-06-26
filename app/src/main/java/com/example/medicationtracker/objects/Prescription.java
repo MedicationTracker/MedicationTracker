@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 
 import static com.example.medicationtracker.Utility.stringToTimeOfDayArray;
@@ -63,9 +64,12 @@ public class Prescription {
     }
 
     /*
-    generate the next set of consumption instances
-    used to create the chronological list of medications
-    post cond: size of result is equal to number of timings
+     * generate the next set of ConsumptionInstances
+     * used to create the chronological list of medications
+     *
+     * Post-conditions:
+     * size of result is equal to number of timings
+     * result is sorted chronologically
      */
     public ArrayList<ConsumptionInstance> generateConsumptionInstances(int skip) {
         GregorianCalendar now = new GregorianCalendar();
@@ -84,6 +88,7 @@ public class Prescription {
             result.add(new ConsumptionInstance(this.id, temp, this.drug, this.consumption_instruction));
         }
 
+        Collections.sort(result);
         return result;
     }
 

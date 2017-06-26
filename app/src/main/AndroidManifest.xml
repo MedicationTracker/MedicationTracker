@@ -4,6 +4,8 @@
 
     <!-- To access Google+ APIs: -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -25,9 +27,20 @@
 
         <receiver android:name=".receivers.AlarmReceiver" />
 
+        <receiver android:name=".receivers.AlarmSetter">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
         <activity android:name=".AlarmScreen"
             android:launchMode="singleTop">
         </activity>
+
+        <service android:name=".services.AlarmService">
+        </service>
+
     </application>
 
 </manifest>

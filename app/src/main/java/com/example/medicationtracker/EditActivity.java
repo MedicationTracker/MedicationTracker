@@ -71,8 +71,8 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     /*
-    If Activity started because of Edit, then obtain the Prescription that is currently being edited.
-    if not edit, this.p is null
+     * If Activity started because of Edit, then obtain the Prescription that is currently being edited.
+     * if not edit, this.p is null
      */
     private void getPrescriptionToBeEdited() {
         Bundle extras = getIntent().getExtras();
@@ -87,7 +87,7 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     /*
-    calling this method to fill up the fields in the case that EditActivity is started thru edit button, not add
+     * calling this method to fill up the fields in the case that EditActivity is started thru edit button, not add
      */
     private void fillUpFields() {
         if (isEditing) {
@@ -119,8 +119,12 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
                 }
         );
     }
+
+    /*
+     * callback for when user picks a date
+     */
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-        date_picker_calendar.set(year, month, dayOfMonth, 0, 0); //set to the dd-MM-yyyy 00:00
+        this.date_picker_calendar.set(year, month, dayOfMonth, 0, 0); //set to the dd-MM-yyyy 00:00
 
         String date = dayOfMonth + "-" + (month+1) + "-" + year;
 
@@ -152,6 +156,9 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
         dialog.show(fm, "TAG opening time list dialog");
     }
 
+    /*
+     * callback for TimeListDialog
+     */
     public void onTimeListDialogFinishedListener(ArrayList<TimeOfDay> xs) {
         String s = timeOfDayArrayToString(xs);
         this.et_timings.setText(s);

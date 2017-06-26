@@ -1,10 +1,13 @@
 package com.example.medicationtracker;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Handler;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,12 +22,14 @@ import com.example.medicationtracker.objects.Prescription;
 import java.util.ArrayList;
 
 public class AlarmScreen extends AppCompatActivity {
+    public static final int ALARM_RING_DURATION = 15000; //in millis
 
     ListView lv;
     Button btn_stop;
     ArrayList<String> instance_names;
     Ringtone ringtone;
     Handler handler;
+    Runnable countdown;
     DatabaseOpenHelper db;
 
     @Override
@@ -46,6 +51,7 @@ public class AlarmScreen extends AppCompatActivity {
         ringtone.play();
 
         handler = new Handler();
+        startCountdown();
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, instance_names);
         lv.setAdapter(adapter);
@@ -63,6 +69,10 @@ public class AlarmScreen extends AppCompatActivity {
 
         ArrayAdapter<String> adapter = (ArrayAdapter<String>) lv.getAdapter();
         adapter.notifyDataSetChanged();
+
+        // refresh countdown
+        stopCountdown();
+        startCountdown();
     }
 
     private void addPrescriptionToList(long id) {
@@ -76,5 +86,54 @@ public class AlarmScreen extends AppCompatActivity {
     public void onStopClicked(View v) {
         ringtone.stop();
         finish();
+    }
+
+    /*
+     * starts the timer to AlarmScreen activity being auto-stopped
+     */
+    public void startCountdown() {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                onTimeUp();
+            }
+        };
+
+        this.countdown = runnable;
+        this.handler.postDelayed(runnable, ALARM_RING_DURATION);
+    }
+
+    /*
+     * cancels the countdown (so that can refresh the countdown)
+     */
+    public void stopCountdown() {
+        this.handler.removeCallbacks(this.countdown);
+    }
+
+
+    public void onTimeUp() {
+        generateNotification();
+        this.ringtone.stop();
+        finish();
+    }
+
+    public void generateNotification() {
+        String content_title = "Missed Medication";
+        String content_text = "yolo hue hue"; // join together all the missed meds
+
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.delete)
+                        .setContentTitle(content_title)
+                        .setContentText(content_text);
+
+        Intent i = new Intent(this, MainActivity.class);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0, i,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        mBuilder.setContentIntent(resultPendingIntent);
+
+        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        nm.notify(1, mBuilder.build());
     }
 }

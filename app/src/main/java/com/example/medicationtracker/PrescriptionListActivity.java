@@ -25,6 +25,7 @@ import com.example.medicationtracker.objects.Prescription;
 import com.example.medicationtracker.objects.TimeOfDay;
 import com.example.medicationtracker.database.DatabaseOpenHelper;
 import com.example.medicationtracker.receivers.AlarmReceiver;
+import com.example.medicationtracker.services.AlarmService;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,7 +35,9 @@ import java.util.List;
 
 import static android.R.attr.id;
 import static android.media.CamcorderProfile.get;
+import static com.example.medicationtracker.R.layout.alarm;
 import static com.example.medicationtracker.Utility.formatInt;
+import static com.example.medicationtracker.Utility.getAlarmIntent;
 import static com.example.medicationtracker.Utility.zeroToMinute;
 
 public class PrescriptionListActivity extends AppCompatActivity {
@@ -65,6 +68,12 @@ public class PrescriptionListActivity extends AppCompatActivity {
         lv_prescriptions.setAdapter(adapter);
     }
 
+    /*
+     * toggles between view by Prescription, or view by Chronological order
+     *
+     * Post-conditions:
+     * chronological order is generated here, so it will be up to date
+     */
     public void onToggleViewClicked(View v) {
         if (lv_prescriptions.getAdapter() instanceof PrescriptionsAdapter) {
             consumption_instances = generateChronoList();
@@ -78,7 +87,9 @@ public class PrescriptionListActivity extends AppCompatActivity {
         }
     }
 
-    // can change to directly modify consumption_instances
+    /*
+     * not yet finalized. only generates the next set if ConsumptionInstances for each medication
+     */
     private ArrayList<ConsumptionInstance> generateChronoList() {
         ArrayList<ConsumptionInstance> result = new ArrayList<>();
         for (Prescription p : prescriptions) {
@@ -154,7 +165,7 @@ public class PrescriptionListActivity extends AppCompatActivity {
         cancelAlarms(p);
 
         ArrayAdapter<Prescription> adapter = (ArrayAdapter<Prescription>) lv_prescriptions.getAdapter();
-        adapter.remove(p);
+        adapter.remove(p); // I am assuming that this.prescriptions is updated by adapter.remove
         adapter.notifyDataSetChanged();
     }
 
@@ -216,7 +227,7 @@ public class PrescriptionListActivity extends AppCompatActivity {
         if (new_p != null) {
             //cancelAlarms(new_p);
             // override old alarms if any
-            setAlarms(new_p);
+            setAlarms(this, new_p.getId());
         }
         updateListView();
     }
@@ -231,28 +242,8 @@ public class PrescriptionListActivity extends AppCompatActivity {
     }
 
     /*
-     * creates a PendingIntent meant for AlarmManager
-     * has 2 pieces of information inside:
-     * a long request code
-     * a string for the timing to be displayed
-     *
-     * Pre-Cond:
-     * request_code is casted to int
-     *
-     * maybe change String timing to Calendar??
-     */
-    public static PendingIntent getAlarmIntent(Context ctx, long request_code, String timing) {
-        Intent intent = new Intent(ctx, AlarmReceiver.class);
-        intent.putExtra("REQUEST_CODE", request_code);
-        intent.putExtra("TIMING_KEY", timing);
-        return PendingIntent.getBroadcast(ctx, (int) request_code, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
-    /*
      * Sets an alarm for a ConsumptionInstance.
      * The request code of the PendingIntent is the ID
-     *
-     * WARNING: seems to have precision error somehow
      */
     private void setAlarm(ConsumptionInstance instance) {
         Calendar cal = instance.getConsumptionTime();
@@ -266,16 +257,23 @@ public class PrescriptionListActivity extends AppCompatActivity {
         AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
         am.setExact(AlarmManager.RTC_WAKEUP, alarm_millis, pending);
 
-        Log.d("tag111", "alarm set for " + timing);
+        Log.d("tag111", "(" + instance.getDrug().getName() + ") alarm set for " + timing + " at millis: " + alarm_millis);
     }
 
     /*
-     * Starts the alarm cycle for this prescription
+     * Sets alarm for next ConsumptionInstance of Prescription
      *
      * Pre-conditions:
      * Prescription must have a valid set of ConsumptionInstances
      */
-    private void setAlarms(Prescription p) {
+    public static void setAlarms(Context ctx, long id) {
+
+        Intent i = new Intent(ctx, AlarmService.class);
+        i.putExtra("REQUEST_CODE", id);
+        i.setAction(AlarmService.CREATE);
+        ctx.startService(i);
+
+        /* deprecated
         ArrayList<ConsumptionInstance> instances = p.generateConsumptionInstances(0);
         if (instances.size() > 0) { // must have at least 1 ConsumptionInstances
             ConsumptionInstance first_instance = instances.get(0);
@@ -283,12 +281,19 @@ public class PrescriptionListActivity extends AppCompatActivity {
         } else {
             Log.e("error", "Error in setAlarms: empty consumption instances");
         }
+        */
     }
 
     /*
      * Cancels the alarm cycle for this prescription
      */
     private void cancelAlarms(Prescription p) {
+        Intent i = new Intent(this, AlarmService.class);
+        i.putExtra("REQUEST_CODE", p.getId());
+        i.setAction(AlarmService.CANCEL);
+        startService(i);
+
+        /* deprecated
         // create exact same pendingIntent
         PendingIntent pending = getAlarmIntent(this, p.getId(), "0000");
         AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
@@ -296,13 +301,14 @@ public class PrescriptionListActivity extends AppCompatActivity {
         am.cancel(pending);
 
         Log.d("tag111", "alarm canceled for " + p.getId());
+        */
     }
 
     public void onSetAlarmsClicked(View v) {
         Toast.makeText(this, "alarms set", Toast.LENGTH_SHORT).show();
 
         for(Prescription p : this.prescriptions) {
-            setAlarms(p);
+            setAlarms(this, p.getId());
         }
     }
 

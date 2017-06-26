@@ -1,9 +1,13 @@
 package com.example.medicationtracker;
 
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import com.example.medicationtracker.objects.TimeOfDay;
+import com.example.medicationtracker.receivers.AlarmReceiver;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -19,6 +23,24 @@ public final class Utility {
     prevents construction of this class
      */
     private Utility() {}
+
+    /*
+     * creates a PendingIntent meant for AlarmManager
+     * Intent contains 2 pieces of information inside:
+     * a long request code
+     * a string for the timing to be displayed
+     *
+     * Pre-Cond:
+     * The Prescription ID is used as request_code by casting to int
+     *
+     * maybe change String timing to Calendar??
+     */
+    public static PendingIntent getAlarmIntent(Context ctx, long request_code, String timing) {
+        Intent intent = new Intent(ctx, AlarmReceiver.class);
+        intent.putExtra("REQUEST_CODE", request_code);
+        intent.putExtra("TIMING_KEY", timing);
+        return PendingIntent.getBroadcast(ctx, (int) request_code, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
 
     public static void zeroToMinute(Calendar c) {
         c.set(Calendar.SECOND, 0);

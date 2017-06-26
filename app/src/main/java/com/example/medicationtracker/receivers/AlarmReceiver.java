@@ -8,14 +8,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.example.medicationtracker.database.DatabaseOpenHelper;
-import com.example.medicationtracker.objects.Alarm_Ringtone;
-import com.example.medicationtracker.objects.ConsumptionInstance;
-import com.example.medicationtracker.objects.Prescription;
-
-import java.util.Calendar;
-
-import static com.example.medicationtracker.PrescriptionListActivity.getAlarmIntent;
-import static com.example.medicationtracker.Utility.formatInt;
+import static com.example.medicationtracker.PrescriptionListActivity.setAlarms;
 
 /**
  * Created by Ryan on 22/6/2017.
@@ -30,16 +23,16 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         // get info to pass to AlarmScreen Activity
         long request_code = (long) intent.getExtras().get("REQUEST_CODE");
-        String timings = (String) intent.getExtras().get("TIMINGS_KEY");
+        String timings = (String) intent.getExtras().get("TIMING_KEY");
 
+        /* deprecated
         // fetch Prescription
         db = DatabaseOpenHelper.getInstance(context);
         Prescription p = db.getPrescription(request_code);
         db.close();
 
         // obtain next ConsumptionInstance for this Prescription
-        // WARNING: generateConsumptionInstance seems to be not working as expected. thus get(1)
-        ConsumptionInstance next_instance = p.generateConsumptionInstances(0).get(1);
+        ConsumptionInstance next_instance = p.generateConsumptionInstances(0).get(0);
         Calendar cal = next_instance.getConsumptionTime();
 
         // convert to a string HHMM
@@ -49,11 +42,13 @@ public class AlarmReceiver extends BroadcastReceiver {
         PendingIntent next_alarm_intent = getAlarmIntent(context, request_code, next_timing);
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         am.setExact(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), next_alarm_intent);
-        Log.d("tag111", "(in receiver) alarm set for " + next_timing);
 
-        // debug log statement
-        Log.d("tag111", "request code is : " + request_code + " alarm manager is " + (next_alarm_intent == null)
-         + " timing is : " + next_timing);
+        Log.d("tag111", "(in receiver) firing alarm for " + p.getDrug().getName() + " at time " + timings);
+        Log.d("tag111", "(in receiver) " + p.getDrug().getName() + ": alarm set for " + next_timing);
+        */
+
+        // set next alarm
+        setAlarms(context, request_code);
 
         // start AlarmScreen Activity
         Intent i = new Intent();

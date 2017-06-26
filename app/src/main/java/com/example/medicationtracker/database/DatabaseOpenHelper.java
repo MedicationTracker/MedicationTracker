@@ -54,7 +54,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     /*
     use this method to get instance of database, so as to avoid leakages
      */
-    public static DatabaseOpenHelper getInstance(Context ctx) {
+    public static synchronized DatabaseOpenHelper getInstance(Context ctx) {
         if (mInstance == null) {
             mInstance = new DatabaseOpenHelper(ctx.getApplicationContext());
         }
