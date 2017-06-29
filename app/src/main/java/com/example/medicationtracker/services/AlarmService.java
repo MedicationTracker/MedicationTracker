@@ -19,11 +19,11 @@ import com.example.medicationtracker.receivers.AlarmReceiver;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import static android.R.attr.action;
 import static android.R.attr.id;
 import static com.example.medicationtracker.Utility.formatInt;
-import static com.example.medicationtracker.Utility.getAlarmIntent;
 
 /**
  * AlarmService
@@ -32,13 +32,17 @@ import static com.example.medicationtracker.Utility.getAlarmIntent;
  *
  * How to use:
  * Create an Intent to this class
- * Put an extra for ID with key "REQUEST_CODE", or leave null to ste alarm for all Prescriptions
+ * Put an extra for ID with KEY_ID as id, or -1 to set alarm for all Prescriptions
  * set action to be either AlarmService.CREATE or alarmService.CANCEL
  */
 
 public class AlarmService extends IntentService {
     public static final String CREATE = "CREATE";
     public static final String CANCEL = "CANCEL";
+
+    public static final String KEY_ID = "ID";
+    public static final String KEY_TIMESTAMP = "TIMESTAMP";
+    public static final long ALL_ALARMS = -1;
 
     private IntentFilter matcher;
 
@@ -52,67 +56,54 @@ public class AlarmService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Log.d("tag111", "(in AlarmService)");
+
         String action = intent.getAction();
 
-        Object request_code = intent.getExtras().get("REQUEST_CODE");
+        long id = (long) intent.getExtras().get(KEY_ID);
+        long timestamp = (long) intent.getExtras().get(KEY_TIMESTAMP);
 
-        if (request_code instanceof String) {
-            setAllAlarms(action);
+        if (id == ALL_ALARMS) {
+            setAllAlarms();
         } else {
-            setOrCancelAlarm(action, (long) request_code);
+            setOrCancelAlarm(action, id, timestamp);
         }
     }
 
-    public void setOrCancelAlarm(String action, long id) {
-        // fetch Prescription
-        DatabaseOpenHelper db = DatabaseOpenHelper.getInstance(this);
-        Prescription p = db.getPrescription(id);
-        db.close();
+    private void setOrCancelAlarm(String action, long id, long timestamp) {
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        intent.putExtra(KEY_ID, id);
 
-        // obtain next ConsumptionInstance for this Prescription
-        ConsumptionInstance next_instance = p.generateConsumptionInstances(0).get(0);
-        Calendar cal = next_instance.getConsumptionTime();
+        // for debugging
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTimeInMillis(timestamp);
+        String timing = formatInt(cal.get(Calendar.HOUR_OF_DAY), 2) + formatInt(cal.get(Calendar.MINUTE), 2);
+        intent.putExtra("TIMING_KEY", timing);
 
-        String timings = formatInt(cal.get(Calendar.HOUR_OF_DAY), 2) + formatInt(cal.get(Calendar.MINUTE), 2);
-
-        PendingIntent pending = getAlarmIntent(this, id, timings);
+        // warning: contains cast from long to id
+        PendingIntent pending = PendingIntent.getBroadcast(this, (int) id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 
         if (matcher.matchAction(action)) {
             if (action.equals(CREATE)) {
-                am.setExact(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pending);
-                Log.d("tag111", "(in AlarmService) Alarm set for " + p.getDrug().getName() + " at time " + timings);
+                am.setExact(AlarmManager.RTC_WAKEUP, timestamp, pending);
+                Log.d("tag111", "(in AlarmService) Alarm set for drug ID " + id + " at time " + timing);
             } else if (action.equals(CANCEL)) {
                 am.cancel(pending);
-                Log.d("tag111", "(in AlarmService) Alarm cancelled for " + p.getDrug().getName());
+                Log.d("tag111", "(in AlarmService) Alarm cancelled for drug ID " + id);
             }
         }
     }
 
-    public void setAllAlarms(String action) {
+    private void setAllAlarms() {
         DatabaseOpenHelper db = DatabaseOpenHelper.getInstance(this);
         ArrayList<Prescription> prescriptions = db.getAllPrescriptions();
         db.close();
 
         for(Prescription p : prescriptions) {
-            // obtain next ConsumptionInstance for this Prescription
-            ConsumptionInstance next_instance = p.generateConsumptionInstances(0).get(0);
+            ConsumptionInstance next_instance = p.getNextInstance();
             Calendar cal = next_instance.getConsumptionTime();
 
-            String timings = formatInt(cal.get(Calendar.HOUR_OF_DAY), 2) + formatInt(cal.get(Calendar.MINUTE), 2);
-
-            PendingIntent pending = getAlarmIntent(this, id, timings);
-            AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-
-            if (matcher.matchAction(action)) {
-                if (action.equals(CREATE)) {
-                    am.setExact(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pending);
-                    Log.d("tag111", "(in AlarmService) Alarm set for " + p.getDrug().getName() + " at time " + timings);
-                } else if (action.equals(CANCEL)) {
-                    am.cancel(pending);
-                    Log.d("tag111", "(in AlarmService) Alarm cancelled for " + p.getDrug().getName());
-                }
-            }
+            setOrCancelAlarm(CREATE, p.getId(), cal.getTimeInMillis());
         }
     }
 }

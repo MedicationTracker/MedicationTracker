@@ -7,11 +7,13 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 
+import com.example.medicationtracker.Utility;
 import com.example.medicationtracker.objects.Prescription;
 import java.util.*;
 
 import static com.example.medicationtracker.Utility.getBytes;
 import static com.example.medicationtracker.Utility.getImage;
+import static com.example.medicationtracker.Utility.longArrayToString;
 
 
 //import static com.example.medicationtracker.Utility.*;
@@ -24,7 +26,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     private static DatabaseOpenHelper mInstance = null;
     public static final String DATABASE_NAME = "MEDICATION TRACKER";
     public static final String TABLE_NAME_PRESCRIPTION = "PRESCRIPTION";
-    public static final int VERSION = 2;
+    public static final int VERSION = 4;
 
     /*
     column names
@@ -37,15 +39,17 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     public static final String COL_TIMINGS = "TIMINGS"; //space-delimited string of 24hr timings e.g. "0800 1200 1800"
     public static final String COL_INTERVAL = "INTERVAL";
     public static final String COL_REMARKS = "REMARKS";
+    public static final String COL_DELETED = "DELETED";
     public static final String CREATE_TABLE_PRESCRIPTION = "CREATE TABLE " + TABLE_NAME_PRESCRIPTION + " (" +
             COL_ID + " INTEGER PRIMARY KEY, " +
             COL_DRUG_NAME + " TEXT, " +
             COL_THUMBNAIL + " BLOB, " +
-            COL_START_DATE + " INTEGER, " +
+            COL_START_DATE + " BIGINT, " +
             COL_DOSAGE + " TEXT, " +
             COL_TIMINGS + " TEXT, " +
             COL_INTERVAL + " INTEGER, " +
-            COL_REMARKS + " TEXT);";
+            COL_REMARKS + " TEXT, " +
+            COL_DELETED + " TEXT" + ");";
 
     private DatabaseOpenHelper(Context context) {
         super(context, DATABASE_NAME, null, VERSION);
@@ -95,6 +99,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         cv.put(COL_TIMINGS, p.getTimingsString());
         cv.put(COL_INTERVAL, p.getInterval());
         cv.put(COL_REMARKS, p.getConsumptionInstruction().getRemarks());
+        cv.put(COL_DELETED, Utility.longArrayToString(p.getDeleted()));
 
         long id = db.insert(TABLE_NAME_PRESCRIPTION, null, cv);
         //p.setId(id);
@@ -122,13 +127,14 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
                     //ConsumptionInstruction ci = new ConsumptionInstruction(dosage, remarks);
 
                     //Calendar start_date = Calendar.getInstance();
-                    long millis = c.getInt(c.getColumnIndex(COL_START_DATE));
+                    long millis = c.getLong(c.getColumnIndex(COL_START_DATE));
                     //start_date.setTimeInMillis(millis);
                     int interval = c.getInt(c.getColumnIndex(COL_INTERVAL));
                     //ArrayList<TimeOfDay> timings = stringToTimeOfDayArray(c.getString(c.getColumnIndex(COL_TIMINGS)));
                     String timings = c.getString(c.getColumnIndex(COL_TIMINGS));
+                    String deleted = c.getString(c.getColumnIndex(COL_DELETED));
                     Prescription p = new Prescription(id, drug_name, drug_thumbnail, dosage, remarks,
-                            millis, interval, timings);
+                            millis, interval, timings, deleted);
                     result.add(p);
                 } while (c.moveToNext());
             }
@@ -154,8 +160,9 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         long millis = c.getLong(c.getColumnIndex(COL_START_DATE));
         int interval = c.getInt(c.getColumnIndex(COL_INTERVAL));
         String timings = c.getString(c.getColumnIndex(COL_TIMINGS));
+        String deleted = c.getString(c.getColumnIndex(COL_DELETED));
         Prescription p = new Prescription(id, drug_name, drug_thumbnail, dosage, remarks,
-                millis, interval, timings);
+                millis, interval, timings, deleted);
 
         return p;
     }
@@ -185,6 +192,18 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         cv.put(COL_TIMINGS, p.getTimingsString());
         cv.put(COL_INTERVAL, p.getInterval());
         cv.put(COL_REMARKS, p.getConsumptionInstruction().getRemarks());
+        cv.put(COL_DELETED, longArrayToString(p.getDeleted()));
+
+        int num_rows_modified = db.update(TABLE_NAME_PRESCRIPTION, cv, COL_ID + " = ?",
+                new String[] { String.valueOf(p.getId()) });
+        return num_rows_modified;
+    }
+
+    public int updateDeleted(Prescription p) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues cv = new ContentValues();
+        cv.put(COL_DELETED, longArrayToString(p.getDeleted()));
 
         int num_rows_modified = db.update(TABLE_NAME_PRESCRIPTION, cv, COL_ID + " = ?",
                 new String[] { String.valueOf(p.getId()) });

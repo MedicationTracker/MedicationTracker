@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -125,7 +126,7 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
      */
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
         this.date_picker_calendar.set(year, month, dayOfMonth, 0, 0); //set to the dd-MM-yyyy 00:00
-
+        zeroToMinute(date_picker_calendar);
         String date = dayOfMonth + "-" + (month+1) + "-" + year;
 
         try {
@@ -211,12 +212,13 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
         String timings = et_timings.getText().toString();
         GregorianCalendar c = (GregorianCalendar) date_picker_calendar.clone();
         zeroToMinute(c);
+        Log.d("tag111", "onSaveClicked: " + c.getTimeInMillis());
 
         if(!isEditing) {
             // activity was started by ADD new drug, so add new drug
             // future: include checks for invalid fields
             this.p = new Prescription(0, drug_name, drug_thumbnail, dosage, remarks,
-                    c.getTimeInMillis(), interval, timings);
+                    c.getTimeInMillis(), interval, timings, "");
             long id = db.addPrescription(p);
             p.setId(id);
         } else {

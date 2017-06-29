@@ -1,6 +1,9 @@
 package com.example.medicationtracker.objects;
 
 import android.graphics.Bitmap;
+import android.os.Parcelable;
+
+import java.io.Serializable;
 
 /**
  * Created by Jia Hao on 5/31/2017.

@@ -1,10 +1,14 @@
 package com.example.medicationtracker.objects;
 
+import android.support.annotation.NonNull;
+
+import java.sql.Time;
+
 /**
  Class to store a time in 24 hour format
  */
 
-public class TimeOfDay {
+public class TimeOfDay implements Comparable {
     String hour; //2 char string e.g. "08"
     String minute;
 
@@ -26,4 +30,12 @@ public class TimeOfDay {
     public void setMinute(String minute) { this.minute = minute; }
 
     public String toString() { return hour + minute; }
+
+    @Override
+    public int compareTo(@NonNull Object o) {
+        if (o instanceof TimeOfDay) {
+            return Integer.valueOf(this.toString()) - Integer.valueOf(o.toString());
+        }
+        return -1;
+    }
 }

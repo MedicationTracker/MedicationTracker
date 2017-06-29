@@ -6,40 +6,65 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.example.medicationtracker.objects.Prescription;
 import com.example.medicationtracker.objects.TimeOfDay;
 import com.example.medicationtracker.receivers.AlarmReceiver;
+import com.example.medicationtracker.services.AlarmService;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
+import static com.example.medicationtracker.services.AlarmService.ALL_ALARMS;
+import static com.example.medicationtracker.services.AlarmService.CANCEL;
+import static com.example.medicationtracker.services.AlarmService.CREATE;
+import static com.example.medicationtracker.services.AlarmService.KEY_ID;
+import static com.example.medicationtracker.services.AlarmService.KEY_TIMESTAMP;
 
 /**
  * Utility class used to store all (static) utility methods
  */
 
 public final class Utility {
+    public static final String TAG = "tag111";
+    public static final long MILLIS_IN_DAY = 86400000;
 
     /*
     prevents construction of this class
      */
     private Utility() {}
 
-    /*
-     * creates a PendingIntent meant for AlarmManager
-     * Intent contains 2 pieces of information inside:
-     * a long request code
-     * a string for the timing to be displayed
-     *
-     * Pre-Cond:
-     * The Prescription ID is used as request_code by casting to int
-     *
-     * maybe change String timing to Calendar??
-     */
-    public static PendingIntent getAlarmIntent(Context ctx, long request_code, String timing) {
-        Intent intent = new Intent(ctx, AlarmReceiver.class);
-        intent.putExtra("REQUEST_CODE", request_code);
-        intent.putExtra("TIMING_KEY", timing);
-        return PendingIntent.getBroadcast(ctx, (int) request_code, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    public static void setAlarm(Context ctx, Prescription p) {
+        Calendar cal = p.getNextInstance().getConsumptionTime();
+
+        Intent intent = new Intent(ctx, AlarmService.class);
+        intent.setAction(CREATE);
+        intent.putExtra(KEY_ID, p.getId());
+        intent.putExtra(KEY_TIMESTAMP, cal.getTimeInMillis());
+
+        ctx.startService(intent);
+    }
+
+    public static void cancelAlarm(Context ctx, Prescription p) {
+        Calendar cal = p.getNextInstance().getConsumptionTime();
+
+        Intent intent = new Intent(ctx, AlarmService.class);
+        intent.setAction(CANCEL);
+        intent.putExtra(KEY_ID, p.getId());
+        intent.putExtra(KEY_TIMESTAMP, cal.getTimeInMillis());
+
+        ctx.startService(intent);
+    }
+
+    public static void setAllAlarms(Context ctx) {
+        Intent intent = new Intent(ctx, AlarmService.class);
+        intent.setAction(CREATE);
+        intent.putExtra(KEY_ID, ALL_ALARMS);
+        intent.putExtra(KEY_TIMESTAMP, 0);
+
+        ctx.startService(intent);
     }
 
     public static void zeroToMinute(Calendar c) {
@@ -69,7 +94,7 @@ public final class Utility {
     public static ArrayList<TimeOfDay> stringToTimeOfDayArray(String timings) {
         ArrayList<TimeOfDay> result = new ArrayList<>();
 
-        if (timings.trim().equals("")) { //timings is whitespace or blank
+        if (timings == null || timings.trim().equals("")) { //timings is whitespace or blank
             return result;
         }
 
@@ -77,6 +102,29 @@ public final class Utility {
         for(String s : arr) {
             TimeOfDay t = new TimeOfDay(s.substring(0, 2), s.substring(2, 4));
             result.add(t);
+        }
+        return result;
+    }
+
+    public static String longArrayToString(ArrayList<Long> xs) {
+        StringBuilder builder = new StringBuilder();
+        for(Long l : xs) {
+            builder.append(String.valueOf(l)).append(" ");
+        }
+        return builder.toString().trim();
+    }
+
+    public static ArrayList<Long> stringToLongArray(String xs) {
+        ArrayList<Long> result = new ArrayList<>();
+
+        if (xs == null || xs.trim().equals("")) { //timings is whitespace or blank
+            return result;
+        }
+
+        String[] arr = xs.split(" ");
+        for(String s : arr) {
+            Long l = Long.parseLong(s);
+            result.add(l);
         }
         return result;
     }

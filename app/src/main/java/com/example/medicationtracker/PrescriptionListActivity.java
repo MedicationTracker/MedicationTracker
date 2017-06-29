@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,18 +28,17 @@ import com.example.medicationtracker.database.DatabaseOpenHelper;
 import com.example.medicationtracker.receivers.AlarmReceiver;
 import com.example.medicationtracker.services.AlarmService;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import static android.R.attr.id;
-import static android.media.CamcorderProfile.get;
-import static com.example.medicationtracker.R.layout.alarm;
+import static com.example.medicationtracker.Utility.MILLIS_IN_DAY;
+import static com.example.medicationtracker.Utility.setAlarm;
+import static com.example.medicationtracker.Utility.cancelAlarm;
 import static com.example.medicationtracker.Utility.formatInt;
-import static com.example.medicationtracker.Utility.getAlarmIntent;
-import static com.example.medicationtracker.Utility.zeroToMinute;
 
 public class PrescriptionListActivity extends AppCompatActivity {
     public static final String EXTRA_KEY_ID = "ID";
@@ -76,7 +76,7 @@ public class PrescriptionListActivity extends AppCompatActivity {
      */
     public void onToggleViewClicked(View v) {
         if (lv_prescriptions.getAdapter() instanceof PrescriptionsAdapter) {
-            consumption_instances = generateChronoList();
+            refreshChronoList();
 
             // display Consumption Instances
             CIAdapter ci_adapter = new CIAdapter(this, consumption_instances);
@@ -88,16 +88,62 @@ public class PrescriptionListActivity extends AppCompatActivity {
     }
 
     /*
-     * not yet finalized. only generates the next set if ConsumptionInstances for each medication
+     * generates 1 day of instances
      */
-    private ArrayList<ConsumptionInstance> generateChronoList() {
+    private ArrayList<ConsumptionInstance> generateChronoList(long start_time) {
         ArrayList<ConsumptionInstance> result = new ArrayList<>();
         for (Prescription p : prescriptions) {
-            ArrayList<ConsumptionInstance> temp = p.generateConsumptionInstances(0);
+            ArrayList<ConsumptionInstance> temp = p.generateConsumptionInstances(start_time, start_time + Utility.MILLIS_IN_DAY);
             result.addAll(temp);
         }
         Collections.sort(result);
         return result;
+    }
+
+    /*
+     * top-up consumption_instances
+     * after being called, consumption instance will have at least 20 items, all in the future
+     */
+    private void fillChronoList() {
+        if (consumption_instances.isEmpty()) {
+            long now = System.currentTimeMillis();
+            while (consumption_instances.size() < 20) {
+                consumption_instances.addAll(generateChronoList(now));
+                now += Utility.MILLIS_IN_DAY;
+            }
+        } else {
+            ConsumptionInstance last = consumption_instances.get(consumption_instances.size() - 1);
+            long last_millis = last.getConsumptionTime().getTimeInMillis() + 1;
+            long latest = Math.max(last_millis, System.currentTimeMillis());
+
+            while (consumption_instances.size() < 20) {
+                consumption_instances.addAll(generateChronoList(latest));
+                latest += Utility.MILLIS_IN_DAY;
+            }
+        }
+        updateListView();
+    }
+
+    /*
+     * removes expired instances
+     * removes expired instances from Prescriptions
+     * refills consumption_instances if too little
+     */
+    private void refreshChronoList() {
+        long now = System.currentTimeMillis();
+        while(!consumption_instances.isEmpty() && consumption_instances.get(0).getConsumptionTime().getTimeInMillis() <= now) {
+            ConsumptionInstance top = consumption_instances.remove(0);
+        }
+
+        for(Prescription p : this.prescriptions) {
+            p.clean();
+            db.updateDeleted(p);
+        }
+        if (consumption_instances.size() < 10) {
+            fillChronoList();
+        }
+
+        updateListView();
     }
 
 
@@ -162,7 +208,7 @@ public class PrescriptionListActivity extends AppCompatActivity {
         db.deletePrescription(p);
         db.close();
 
-        cancelAlarms(p);
+        cancelAlarm(this, p);
 
         ArrayAdapter<Prescription> adapter = (ArrayAdapter<Prescription>) lv_prescriptions.getAdapter();
         adapter.remove(p); // I am assuming that this.prescriptions is updated by adapter.remove
@@ -188,9 +234,54 @@ public class PrescriptionListActivity extends AppCompatActivity {
             final ConsumptionInstance ci = consumption_instances.get(position);
 
             tv_name.setText(ci.getDrug().getName());
+            if (ci.isDeleted()) {
+                tv_name.setBackgroundColor(getResources().getColor(R.color.colorRed));
+            } else {
+                tv_name.setBackgroundColor(getResources().getColor(R.color.colorEmpty));
+            }
             tv_time.setText(
                     formatInt(ci.getConsumptionTime().get(Calendar.HOUR_OF_DAY), 2) +
                     formatInt(ci.getConsumptionTime().get(Calendar.MINUTE), 2));
+
+            // listener
+            tv_name.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(ci.isDeleted()) {
+                        ci.setDeleted(false);
+                        v.setBackgroundColor(getResources().getColor(R.color.colorEmpty));
+                        //update prescription
+                        for(Prescription p : prescriptions) {
+                            if (p.getId() == ci.getId()) {
+                                long millis = ci.getConsumptionTime().getTimeInMillis();
+                                p.getDeleted().remove(millis);
+                                String msg = "restored : " + p.getDrug().getName() + millis;
+                                Toast.makeText(PrescriptionListActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                setAlarm(v.getContext(), p);
+
+                                db.updateDeleted(p);
+                                db.close();
+                            }
+                        }
+                    } else {
+                        ci.setDeleted(true);
+                        v.setBackgroundColor(getResources().getColor(R.color.colorRed));
+                        for(Prescription p : prescriptions) {
+                            if (p.getId() == ci.getId()) {
+                                long millis = ci.getConsumptionTime().getTimeInMillis();
+                                p.getDeleted().add(millis);
+                                String msg = "deleted : " + p.getDrug().getName() + millis;
+                                Toast.makeText(PrescriptionListActivity.this, msg, Toast.LENGTH_SHORT).show();
+                                setAlarm(v.getContext(), p);
+
+                                db.updateDeleted(p);
+                                db.close();
+                            }
+                        }
+                    }
+                    updateListView();
+                }
+            });
 
             return convertView;
         }
@@ -225,10 +316,9 @@ public class PrescriptionListActivity extends AppCompatActivity {
 
         // unset and reset the alarms
         if (new_p != null) {
-            //cancelAlarms(new_p);
-            // override old alarms if any
-            setAlarms(this, new_p.getId());
+            setAlarm(this, new_p);
         }
+        consumption_instances.clear();
         updateListView();
     }
 
@@ -241,11 +331,34 @@ public class PrescriptionListActivity extends AppCompatActivity {
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //************************ LAND OF UNUSED FUNCTIONS **************
+
+
     /*
      * Sets an alarm for a ConsumptionInstance.
      * The request code of the PendingIntent is the ID
      */
-    private void setAlarm(ConsumptionInstance instance) {
+    private void setAlarmz(ConsumptionInstance instance) {
         Calendar cal = instance.getConsumptionTime();
 
         String timing = formatInt(cal.get(Calendar.HOUR_OF_DAY), 2) + formatInt(cal.get(Calendar.MINUTE), 2);
@@ -253,9 +366,9 @@ public class PrescriptionListActivity extends AppCompatActivity {
         long request_code = instance.getId();
 
         // set Broadcast at specified time with request_code
-        PendingIntent pending = getAlarmIntent(this, request_code, timing);
-        AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-        am.setExact(AlarmManager.RTC_WAKEUP, alarm_millis, pending);
+        //PendingIntent pending = getAlarmIntent(this, request_code, timing);
+        //AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+        //am.setExact(AlarmManager.RTC_WAKEUP, alarm_millis, pending);
 
         Log.d("tag111", "(" + instance.getDrug().getName() + ") alarm set for " + timing + " at millis: " + alarm_millis);
     }
@@ -266,7 +379,7 @@ public class PrescriptionListActivity extends AppCompatActivity {
      * Pre-conditions:
      * Prescription must have a valid set of ConsumptionInstances
      */
-    public static void setAlarms(Context ctx, long id) {
+    public static void setAlarmz(Context ctx, long id) {
 
         Intent i = new Intent(ctx, AlarmService.class);
         i.putExtra("REQUEST_CODE", id);
@@ -304,43 +417,5 @@ public class PrescriptionListActivity extends AppCompatActivity {
         */
     }
 
-    public void onSetAlarmsClicked(View v) {
-        Toast.makeText(this, "alarms set", Toast.LENGTH_SHORT).show();
 
-        for(Prescription p : this.prescriptions) {
-            setAlarms(this, p.getId());
-        }
-    }
-
-
-
-
-
-
-
-
-
-    public ArrayList<Prescription> getTestList() {
-        Bitmap img = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-        Drug d1 = new Drug("panadol", img);
-        Drug d2 = new Drug("soficloasdasdr", img);
-        ConsumptionInstruction ci1 = new ConsumptionInstruction("2 tablets", "after food");
-        ConsumptionInstruction ci2 = new ConsumptionInstruction("10ml", "nil");
-        GregorianCalendar c1 = new GregorianCalendar();
-        GregorianCalendar c2 = new GregorianCalendar();
-        ArrayList<TimeOfDay> t1 = new ArrayList<>();
-        t1.add(new TimeOfDay("10", "00"));
-        t1.add(new TimeOfDay("12", "30"));
-        ArrayList<TimeOfDay> t2 = new ArrayList<>();
-        t2.add(new TimeOfDay("14", "03"));
-        t2.add(new TimeOfDay("18", "05"));
-
-        Prescription p1 = new Prescription(c1, 1, t1, d1, ci1);
-        Prescription p2 = new Prescription(c2, 2, t2, d2, ci2);
-
-        ArrayList<Prescription> result = new ArrayList<>();
-        result.add(p1);
-        result.add(p2);
-        return result;
-    }
 }

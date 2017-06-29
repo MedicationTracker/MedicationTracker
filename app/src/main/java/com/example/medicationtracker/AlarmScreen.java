@@ -21,6 +21,9 @@ import com.example.medicationtracker.objects.Prescription;
 
 import java.util.ArrayList;
 
+import static com.example.medicationtracker.Utility.setAlarm;
+import static com.example.medicationtracker.services.AlarmService.KEY_ID;
+
 public class AlarmScreen extends AppCompatActivity {
     public static final int ALARM_RING_DURATION = 15000; //in millis
 
@@ -38,13 +41,13 @@ public class AlarmScreen extends AppCompatActivity {
         setContentView(R.layout.activity_alarm_screen);
 
         Intent intent = getIntent();
-        long request_code = (long) intent.getExtras().get("REQUEST_CODE");
+        long id = (long) intent.getExtras().get(KEY_ID);
 
         lv = (ListView) findViewById(R.id.alarm_screen_lv);
         btn_stop = (Button) findViewById(R.id.alarm_screen_btn_stop);
 
         instance_names = new ArrayList<>();
-        addPrescriptionToList(request_code);
+        addPrescriptionToList(id);
 
         Uri alarmTone = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         this.ringtone = RingtoneManager.getRingtone(getApplicationContext(), alarmTone);
@@ -55,17 +58,18 @@ public class AlarmScreen extends AppCompatActivity {
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, instance_names);
         lv.setAdapter(adapter);
+
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
-        Log.d("fck", "inside on new intent");
+        Log.d(Utility.TAG, "inside on new intent");
         super.onNewIntent(intent);
 
         setIntent(intent);
 
-        long request_code = (long) intent.getExtras().get("REQUEST_CODE");
-        addPrescriptionToList(request_code);
+        long id = (long) intent.getExtras().get(KEY_ID);
+        addPrescriptionToList(id);
 
         ArrayAdapter<String> adapter = (ArrayAdapter<String>) lv.getAdapter();
         adapter.notifyDataSetChanged();
@@ -81,6 +85,8 @@ public class AlarmScreen extends AppCompatActivity {
         db.close();
 
         instance_names.add(p.getDrug().getName());
+
+        setAlarm(this, p);
     }
 
     public void onStopClicked(View v) {
