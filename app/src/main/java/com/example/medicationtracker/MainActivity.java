@@ -1,18 +1,13 @@
 package com.example.medicationtracker;
 
-import android.app.AlarmManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TimePicker;
-
-import java.util.Calendar;
-
-import static com.example.medicationtracker.R.id.set_time;
 
 // changes
 
@@ -36,10 +31,18 @@ public class MainActivity extends AppCompatActivity {
         startActivity(i);
     }
 
+    // inflate settings menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.mymenu,menu);
+        inflater.inflate(R.menu.setting_menu, menu);
+        return true;
+    }
+
+    // Handle setting click
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        startActivity(new Intent(this,Settings.class));
         return true;
     }
 }
