@@ -24,6 +24,7 @@
         <activity android:name=".PrescriptionListActivity" />
         <activity android:name=".EditActivity" />
         <activity android:name=".Alarm" />
+        <activity android:name=".Settings" />
 
         <receiver android:name=".receivers.AlarmReceiver" />
         <receiver android:name=".receivers.AlarmSetter">
