@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.DatePicker;
@@ -22,6 +23,7 @@ import com.example.medicationtracker.objects.Prescription;
 import com.example.medicationtracker.objects.TimeOfDay;
 import com.example.medicationtracker.database.DatabaseOpenHelper;
 
+import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ import java.util.GregorianCalendar;
 import static android.media.CamcorderProfile.get;
 import static com.example.medicationtracker.PrescriptionListActivity.EXTRA_KEY_ID;
 import static com.example.medicationtracker.Utility.*;
+import static com.example.medicationtracker.dialogs.TimeListDialog.TAG_TIMELISTDIALOG;
 
 public class EditActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener, TimeListDialog.TimeListDialogListener {
     private static final int TAKE_PHOTO_REQUEST_CODE = 3;
@@ -62,15 +65,35 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
         this.iv_thumbnail = (ImageView) findViewById(R.id.activity_edit_iv_thumbnail);
         date_picker_calendar = new GregorianCalendar();
         this.df = new SimpleDateFormat(date_format_pattern);
-        this.db = DatabaseOpenHelper.getInstance(this);
+        this.isEditing = isEditing();
 
-        getPrescriptionToBeEdited();
-        fillUpFields();
+        if (this.isEditing) {
+            getPrescriptionToBeEdited();
+            fillUpFields();
+        }
         setDateListener();
         setTimeListener();
         setThumbnailListener();
+
+        FragmentManager fm = getFragmentManager();
+        TimeListDialog retainedFragment = (TimeListDialog) fm.findFragmentByTag(TimeListDialog.TAG_TIMELISTDIALOG);
+        if(retainedFragment != null) {
+            Log.d("tag111", "retainedfragment exists");
+            retainedFragment.setTimeListDialogListener(this.time_dialog_listener);
+            //retainedFragment.show(fm, TimeListDialog.TAG_TIMELISTDIALOG);
+        }
     }
 
+    private boolean isEditing() {
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            Long id = (Long) extras.get(EXTRA_KEY_ID);
+            if (id != null) {
+                return true;
+            }
+        }
+        return false;
+    }
     /*
      * If Activity started because of Edit, then obtain the Prescription that is currently being edited.
      * if not edit, this.p is null
@@ -80,6 +103,7 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
         if (extras != null) {
             Long id = (Long) extras.get(EXTRA_KEY_ID);
             if (id != null) {
+                this.db = DatabaseOpenHelper.getInstance(this);
                 this.p = this.db.getPrescription(id);
                 db.close();
                 this.isEditing = true;
@@ -91,7 +115,7 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
      * calling this method to fill up the fields in the case that EditActivity is started thru edit button, not add
      */
     private void fillUpFields() {
-        if (isEditing) {
+        if (this.p != null) {
             this.et_name.setText(p.getDrug().getName());
             this.et_dosage.setText(p.getConsumptionInstruction().getDosage());
             this.et_remarks.setText(p.getConsumptionInstruction().getRemarks());
@@ -99,6 +123,7 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
             this.et_start_date.setText(df.format(p.getStartDate().getTime()));
             this.et_timings.setText(timeOfDayArrayToString(p.getTimings()));
             this.iv_thumbnail.setImageBitmap(p.getDrug().getThumbnail());
+            this.date_picker_calendar = p.getStartDate();
         }
     }
 
@@ -154,7 +179,7 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
         FragmentManager fm = getFragmentManager();
         TimeListDialog dialog = TimeListDialog.newInstance(inputs);
         dialog.setTimeListDialogListener(this.time_dialog_listener); // EditActivity can receive callbacks from TimeListDialog
-        dialog.show(fm, "TAG opening time list dialog");
+        dialog.show(fm, TimeListDialog.TAG_TIMELISTDIALOG);
     }
 
     /*
@@ -201,44 +226,82 @@ public class EditActivity extends AppCompatActivity implements DatePickerDialog.
     }
 
     public void onSaveClicked(View v) {
-        this.db = DatabaseOpenHelper.getInstance(this);
+        if (!validateInputs()) {
+            return;
+        }
 
-        // fetch values from fields
-        String drug_name = et_name.getText().toString();
-        Bitmap drug_thumbnail = ((BitmapDrawable) iv_thumbnail.getDrawable()).getBitmap();
-        String remarks = et_remarks.getText().toString();
-        String dosage = et_dosage.getText().toString();
-        int interval = Integer.parseInt(et_frequency.getText().toString());
-        String timings = et_timings.getText().toString();
-        GregorianCalendar c = (GregorianCalendar) date_picker_calendar.clone();
-        zeroToMinute(c);
-        Log.d("tag111", "onSaveClicked: " + c.getTimeInMillis());
+        this.db = DatabaseOpenHelper.getInstance(this);
+        Prescription new_p = makePrescriptionFromFields();
 
         if(!isEditing) {
             // activity was started by ADD new drug, so add new drug
             // future: include checks for invalid fields
-            this.p = new Prescription(0, drug_name, drug_thumbnail, dosage, remarks,
-                    c.getTimeInMillis(), interval, timings, "");
-            long id = db.addPrescription(p);
-            p.setId(id);
+            long id = db.addPrescription(new_p);
+            new_p.setId(id);
         } else {
             // activity started by edit drug
             // Update this drug
-            p.getDrug().setName(drug_name);
-            p.getDrug().setThumbnail(drug_thumbnail);
-            p.getConsumptionInstruction().setDosage(dosage);
-            p.getConsumptionInstruction().setRemarks(remarks);
-            p.setStartDate(c);
-            p.setInterval(interval);
-            p.setTimings(stringToTimeOfDayArray(timings));
-            db.updatePrescription(p);
+            long id = this.p.getId();
+            new_p.setId(id);
+            db.updatePrescription(new_p);
         }
-
+        this.p = new_p;
         db.close();
+
         Intent result = new Intent();
         //return id of new/edited Prescription for Calling activity to retrieve
         result.putExtra(EXTRA_KEY_ID, p.getId());
         setResult(RESULT_OK,result);
         finish();
     }
+
+    private boolean validateInputs() {
+        boolean isValid = true;
+
+        if (TextUtils.isEmpty(et_name.getText().toString())) {
+            et_name.setError("Name required");
+            isValid = false;
+        }
+
+        if (TextUtils.isEmpty(et_dosage.getText().toString())) {
+            et_dosage.setError("Dosage required");
+            isValid = false;
+        }
+
+        if (TextUtils.isEmpty(et_frequency.getText().toString())) {
+            et_frequency.setError("Interval required");
+            isValid = false;
+        }
+
+        if (TextUtils.isEmpty(et_timings.getText().toString())) {
+            et_timings.setFocusable(true);
+            et_timings.setFocusableInTouchMode(true);
+            et_timings.setError("At least 1 timing required");
+            isValid = false;
+        }
+        return isValid;
+    }
+
+    /*
+     * assumes that all fields are filled and valid
+     */
+    private Prescription makePrescriptionFromFields() {
+        String drug_name = et_name.getText().toString();
+        Bitmap drug_thumbnail = ((BitmapDrawable) iv_thumbnail.getDrawable()).getBitmap();
+        String remarks = et_remarks.getText().toString();
+        String dosage = et_dosage.getText().toString();
+        int interval = Integer.parseInt(et_frequency.getText().toString());
+        String timings = et_timings.getText().toString();
+        GregorianCalendar c;
+        if (date_picker_calendar == null) {
+            c = new GregorianCalendar();
+        } else {
+            c = (GregorianCalendar) date_picker_calendar.clone();
+        }
+
+        return new Prescription(0, drug_name, drug_thumbnail, dosage, remarks,
+                c.getTimeInMillis(), interval, timings, "");
+    }
+
+
 }

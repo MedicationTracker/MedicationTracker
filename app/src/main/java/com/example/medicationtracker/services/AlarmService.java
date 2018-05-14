@@ -2,16 +2,13 @@ package com.example.medicationtracker.services;
 
 import android.app.AlarmManager;
 import android.app.IntentService;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.Cursor;
-import android.provider.ContactsContract;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.example.medicationtracker.Utility;
 import com.example.medicationtracker.database.DatabaseOpenHelper;
 import com.example.medicationtracker.objects.ConsumptionInstance;
 import com.example.medicationtracker.objects.Prescription;
@@ -21,8 +18,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import static android.R.attr.action;
-import static android.R.attr.id;
 import static com.example.medicationtracker.Utility.formatInt;
 
 /**
@@ -55,12 +50,14 @@ public class AlarmService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d("tag111", "(in AlarmService)");
+        Log.d(Utility.TAG, "Inside AlarmService/onHandleIntent");
 
         String action = intent.getAction();
 
         long id = (long) intent.getExtras().get(KEY_ID);
         long timestamp = (long) intent.getExtras().get(KEY_TIMESTAMP);
+
+        Log.d(Utility.TAG, "Inside AlarmService/onHandleIntent: Drug id: " + id + ", timestamp: " + timestamp);
 
         if (id == ALL_ALARMS) {
             setAllAlarms();
@@ -72,12 +69,12 @@ public class AlarmService extends IntentService {
     private void setOrCancelAlarm(String action, long id, long timestamp) {
         Intent intent = new Intent(this, AlarmReceiver.class);
         intent.putExtra(KEY_ID, id);
+        intent.putExtra(KEY_TIMESTAMP, timestamp);
 
-        // for debugging
+        // converts timestamp to String timing
         GregorianCalendar cal = new GregorianCalendar();
         cal.setTimeInMillis(timestamp);
         String timing = formatInt(cal.get(Calendar.HOUR_OF_DAY), 2) + formatInt(cal.get(Calendar.MINUTE), 2);
-        intent.putExtra("TIMING_KEY", timing);
 
         // warning: contains cast from long to id
         PendingIntent pending = PendingIntent.getBroadcast(this, (int) id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -86,10 +83,10 @@ public class AlarmService extends IntentService {
         if (matcher.matchAction(action)) {
             if (action.equals(CREATE)) {
                 am.setExact(AlarmManager.RTC_WAKEUP, timestamp, pending);
-                Log.d("tag111", "(in AlarmService) Alarm set for drug ID " + id + " at time " + timing);
+                Log.d(Utility.TAG, "Inside AlarmService: Alarm set for drug ID " + id + " at time " + timing);
             } else if (action.equals(CANCEL)) {
                 am.cancel(pending);
-                Log.d("tag111", "(in AlarmService) Alarm cancelled for drug ID " + id);
+                Log.d(Utility.TAG, "Inside AlarmService: Alarm cancelled for drug ID " + id);
             }
         }
     }

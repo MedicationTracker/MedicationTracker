@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Android Login and Registration</string>
+    <string name="app_name">Medication Tracker</string>
     <string name="hint_email">Email</string>
     <string name="hint_password">Password</string>
     <string name="hint_name">Fullname</string>
@@ -8,6 +8,22 @@
     <string name="btn_link_to_register">Not a member? Sign up now.</string>
     <string name="btn_link_to_login">Already registred! Login Me.</string>
     <string name="welcome">Welcome</string>
-    <string name="btn_logout">LOGOUT</string>
+    <string name="btn_logout">Logout</string>
     <string name="name">Fullname</string>
+    <string name="btn_add">ADD</string>
+    <string name="label_timings">Timings</string>
+    <string name="btn_clear">CLEAR</string>
+    <string name="btn_save">SAVE</string>
+    <string name="label_default">Enter text here</string>
+    <string name="label_history">My History</string>
+    <string name="btn_medications">My Medications</string>
+    <string name="btn_history">My History</string>
+    <string name="label_next_appt">Next appointment on:</string>
+    <string name="label_missed_appt">Appointment Missed</string>
+    <string name="label_in">in:</string>
+    <string name="btn_taken">TAKEN</string>
+    <string name="btn_not_now">NOT NOW</string>
+    <string name="btn_view">VIEW</string>
+
+    <string name="default_desc">Decorative image</string>
 </resources>

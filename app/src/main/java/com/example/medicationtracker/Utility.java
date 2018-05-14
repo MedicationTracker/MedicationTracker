@@ -1,6 +1,5 @@
 package com.example.medicationtracker;
 
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -8,15 +7,13 @@ import android.graphics.BitmapFactory;
 
 import com.example.medicationtracker.objects.Prescription;
 import com.example.medicationtracker.objects.TimeOfDay;
-import com.example.medicationtracker.receivers.AlarmReceiver;
 import com.example.medicationtracker.services.AlarmService;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
+import java.util.GregorianCalendar;
 
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
 import static com.example.medicationtracker.services.AlarmService.ALL_ALARMS;
 import static com.example.medicationtracker.services.AlarmService.CANCEL;
 import static com.example.medicationtracker.services.AlarmService.CREATE;
@@ -36,7 +33,7 @@ public final class Utility {
      */
     private Utility() {}
 
-    public static void setAlarm(Context ctx, Prescription p) {
+    static void setAlarm(Context ctx, Prescription p) {
         Calendar cal = p.getNextInstance().getConsumptionTime();
 
         Intent intent = new Intent(ctx, AlarmService.class);
@@ -47,7 +44,7 @@ public final class Utility {
         ctx.startService(intent);
     }
 
-    public static void cancelAlarm(Context ctx, Prescription p) {
+    static void cancelAlarm(Context ctx, Prescription p) {
         Calendar cal = p.getNextInstance().getConsumptionTime();
 
         Intent intent = new Intent(ctx, AlarmService.class);
@@ -67,17 +64,23 @@ public final class Utility {
         ctx.startService(intent);
     }
 
-    public static void zeroToMinute(Calendar c) {
+    static void zeroToMinute(Calendar c) {
         c.set(Calendar.SECOND, 0);
         c.set(Calendar.MILLISECOND, 0);
     }
 
-    public static String CalendarToDateString(Calendar c) {
-        int day = c.get(Calendar.DAY_OF_MONTH);
-        int month = c.get(Calendar.MONTH);
-        int year = c.get(Calendar.YEAR);
-        return formatInt(day, 2) + formatInt(month, 2) + formatInt(year, 4);
+    static String timestampToString(long timestamp) {
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTimeInMillis(timestamp);
+        return formatInt(cal.get(Calendar.HOUR_OF_DAY), 2) + formatInt(cal.get(Calendar.MINUTE), 2);
     }
+
+//    public static String CalendarToDateString(Calendar c) {
+//        int day = c.get(Calendar.DAY_OF_MONTH);
+//        int month = c.get(Calendar.MONTH);
+//        int year = c.get(Calendar.YEAR);
+//        return formatInt(day, 2) + formatInt(month, 2) + formatInt(year, 4);
+//    }
 
     public static String formatInt(int num, int digits) {
         return String.format("%0" + digits + "d", num);
@@ -141,21 +144,20 @@ public final class Utility {
         return BitmapFactory.decodeByteArray(image, 0, image.length);
     }
 
-    private static long dateStringToMillis(String ds) {
-        int day = Integer.parseInt(ds.substring(0, 2));
-        int month = Integer.parseInt(ds.substring(2, 4));
-        int year = Integer.parseInt(ds.substring(4, 8));
-        Calendar c = Calendar.getInstance();
-        c.set(Calendar.DAY_OF_MONTH, day);
-        c.set(Calendar.MONTH, month);
-        c.set(Calendar.YEAR, year);
-        return c.getTimeInMillis();
-    }
-
-    private static Calendar millisToCalendar(long millis) {
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(millis);
-        return c;
-    }
-
+//    private static long dateStringToMillis(String ds) {
+//        int day = Integer.parseInt(ds.substring(0, 2));
+//        int month = Integer.parseInt(ds.substring(2, 4));
+//        int year = Integer.parseInt(ds.substring(4, 8));
+//        Calendar c = Calendar.getInstance();
+//        c.set(Calendar.DAY_OF_MONTH, day);
+//        c.set(Calendar.MONTH, month);
+//        c.set(Calendar.YEAR, year);
+//        return c.getTimeInMillis();
+//    }
+//
+//    private static Calendar millisToCalendar(long millis) {
+//        Calendar c = Calendar.getInstance();
+//        c.setTimeInMillis(millis);
+//        return c;
+//    }
 }

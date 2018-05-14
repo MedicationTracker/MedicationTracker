@@ -16,31 +16,29 @@ import static com.example.medicationtracker.Utility.getImage;
 import static com.example.medicationtracker.Utility.longArrayToString;
 
 
-//import static com.example.medicationtracker.Utility.*;
-
 /**
- * Created by Jia Hao on 5/31/2017.
+ * Database for Prescriptions
  */
 
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
     private static DatabaseOpenHelper mInstance = null;
-    public static final String DATABASE_NAME = "MEDICATION TRACKER";
-    public static final String TABLE_NAME_PRESCRIPTION = "PRESCRIPTION";
-    public static final int VERSION = 4;
+    private static final String DATABASE_NAME = "MEDICATION TRACKER";
+    private static final String TABLE_NAME_PRESCRIPTION = "PRESCRIPTION";
+    private static final int VERSION = 4;
 
-    /*
-    column names
-     */
-    public static final String COL_ID = "ID";
-    public static final String COL_DRUG_NAME = "DRUGNAME";
-    public static final String COL_THUMBNAIL = "THUMBNAIL"; //stores a byte array
-    public static final String COL_START_DATE = "STARTDATE"; //stores epoch time in millis
-    public static final String COL_DOSAGE = "DOSAGE";
-    public static final String COL_TIMINGS = "TIMINGS"; //space-delimited string of 24hr timings e.g. "0800 1200 1800"
-    public static final String COL_INTERVAL = "INTERVAL";
-    public static final String COL_REMARKS = "REMARKS";
-    public static final String COL_DELETED = "DELETED";
-    public static final String CREATE_TABLE_PRESCRIPTION = "CREATE TABLE " + TABLE_NAME_PRESCRIPTION + " (" +
+    // column names
+    private static final String COL_ID = "ID";
+    private static final String COL_DRUG_NAME = "DRUGNAME";
+    private static final String COL_THUMBNAIL = "THUMBNAIL"; //stores a byte array
+    private static final String COL_START_DATE = "STARTDATE"; //stores epoch time in millis
+    private static final String COL_DOSAGE = "DOSAGE";
+    private static final String COL_TIMINGS = "TIMINGS"; //space-delimited string of 24hr timings e.g. "0800 1200 1800"
+    private static final String COL_INTERVAL = "INTERVAL";
+    private static final String COL_REMARKS = "REMARKS";
+    private static final String COL_DELETED = "DELETED";
+
+    // create table String
+    private static final String CREATE_TABLE_PRESCRIPTION = "CREATE TABLE " + TABLE_NAME_PRESCRIPTION + " (" +
             COL_ID + " INTEGER PRIMARY KEY, " +
             COL_DRUG_NAME + " TEXT, " +
             COL_THUMBNAIL + " BLOB, " +
@@ -89,6 +87,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     stores Prescription into db
      */
     public long addPrescription(Prescription p) {
+        //Log.d(Utility.TAG, "Adding Prescription " + p.getDrug().getName());
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues cv = new ContentValues();
@@ -101,7 +100,8 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         cv.put(COL_REMARKS, p.getConsumptionInstruction().getRemarks());
         cv.put(COL_DELETED, Utility.longArrayToString(p.getDeleted()));
 
-        long id = db.insert(TABLE_NAME_PRESCRIPTION, null, cv);
+        long id;
+        id = db.insert(TABLE_NAME_PRESCRIPTION, null, cv);
         //p.setId(id);
         return id;
     }
@@ -120,17 +120,13 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
                     String drug_name = c.getString(c.getColumnIndex(COL_DRUG_NAME));
                     Bitmap drug_thumbnail = getImage(c.getBlob(c.getColumnIndex(COL_THUMBNAIL)));
-                    //Drug d = new Drug(drug_name, drug_thumbnail);
 
                     String remarks = c.getString(c.getColumnIndex(COL_REMARKS));
                     String dosage = c.getString(c.getColumnIndex(COL_DOSAGE));
-                    //ConsumptionInstruction ci = new ConsumptionInstruction(dosage, remarks);
 
-                    //Calendar start_date = Calendar.getInstance();
                     long millis = c.getLong(c.getColumnIndex(COL_START_DATE));
-                    //start_date.setTimeInMillis(millis);
                     int interval = c.getInt(c.getColumnIndex(COL_INTERVAL));
-                    //ArrayList<TimeOfDay> timings = stringToTimeOfDayArray(c.getString(c.getColumnIndex(COL_TIMINGS)));
+
                     String timings = c.getString(c.getColumnIndex(COL_TIMINGS));
                     String deleted = c.getString(c.getColumnIndex(COL_DELETED));
                     Prescription p = new Prescription(id, drug_name, drug_thumbnail, dosage, remarks,
@@ -138,6 +134,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
                     result.add(p);
                 } while (c.moveToNext());
             }
+            c.close();
         }
         return result;
     }
@@ -152,34 +149,37 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
         if (c != null) {
             c.moveToFirst();
-        }
-        String drug_name = c.getString(c.getColumnIndex(COL_DRUG_NAME));
-        Bitmap drug_thumbnail = getImage(c.getBlob(c.getColumnIndex(COL_THUMBNAIL)));
-        String remarks = c.getString(c.getColumnIndex(COL_REMARKS));
-        String dosage = c.getString(c.getColumnIndex(COL_DOSAGE));
-        long millis = c.getLong(c.getColumnIndex(COL_START_DATE));
-        int interval = c.getInt(c.getColumnIndex(COL_INTERVAL));
-        String timings = c.getString(c.getColumnIndex(COL_TIMINGS));
-        String deleted = c.getString(c.getColumnIndex(COL_DELETED));
-        Prescription p = new Prescription(id, drug_name, drug_thumbnail, dosage, remarks,
-                millis, interval, timings, deleted);
 
-        return p;
+            String drug_name = c.getString(c.getColumnIndex(COL_DRUG_NAME));
+            Bitmap drug_thumbnail = getImage(c.getBlob(c.getColumnIndex(COL_THUMBNAIL)));
+            String remarks = c.getString(c.getColumnIndex(COL_REMARKS));
+            String dosage = c.getString(c.getColumnIndex(COL_DOSAGE));
+            long millis = c.getLong(c.getColumnIndex(COL_START_DATE));
+            int interval = c.getInt(c.getColumnIndex(COL_INTERVAL));
+            String timings = c.getString(c.getColumnIndex(COL_TIMINGS));
+            String deleted = c.getString(c.getColumnIndex(COL_DELETED));
+            Prescription p = new Prescription(id, drug_name, drug_thumbnail, dosage, remarks,
+                    millis, interval, timings, deleted);
+
+            c.close();
+            return p;
+        }
+        return null;
     }
 
     public void deletePrescription(Prescription p) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_NAME_PRESCRIPTION, COL_ID + " = ?", new String[] { String.valueOf(p.getId()) });
     }
-    public void deletePrescriptionById(long id) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_NAME_PRESCRIPTION, COL_ID + " = ?", new String[] { String.valueOf(id) });
-    }
+//    public void deletePrescriptionById(long id) {
+//        SQLiteDatabase db = this.getWritableDatabase();
+//        db.delete(TABLE_NAME_PRESCRIPTION, COL_ID + " = ?", new String[] { String.valueOf(id) });
+//    }
 
     /*
-    updates
-    does not require p to exist
-    returns the number of affected rows
+     * updates
+     * does not require p to exist
+     * returns the number of affected rows
      */
     public int updatePrescription(Prescription p) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -194,7 +194,8 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         cv.put(COL_REMARKS, p.getConsumptionInstruction().getRemarks());
         cv.put(COL_DELETED, longArrayToString(p.getDeleted()));
 
-        int num_rows_modified = db.update(TABLE_NAME_PRESCRIPTION, cv, COL_ID + " = ?",
+        int num_rows_modified;
+        num_rows_modified = db.update(TABLE_NAME_PRESCRIPTION, cv, COL_ID + " = ?",
                 new String[] { String.valueOf(p.getId()) });
         return num_rows_modified;
     }
@@ -205,7 +206,8 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put(COL_DELETED, longArrayToString(p.getDeleted()));
 
-        int num_rows_modified = db.update(TABLE_NAME_PRESCRIPTION, cv, COL_ID + " = ?",
+        int num_rows_modified;
+        num_rows_modified = db.update(TABLE_NAME_PRESCRIPTION, cv, COL_ID + " = ?",
                 new String[] { String.valueOf(p.getId()) });
         return num_rows_modified;
     }

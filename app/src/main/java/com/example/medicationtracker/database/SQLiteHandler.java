@@ -1,5 +1,8 @@
 package com.example.medicationtracker.database;
 
+import android.content.Context;
+import android.database.sqlite.SQLiteOpenHelper;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -8,6 +11,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import java.util.HashMap;
+
+/**
+ * Handles storing and retrieving details of user that is currently logged in
+ */
 
 public class SQLiteHandler extends SQLiteOpenHelper {
 

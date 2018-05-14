@@ -1,15 +1,11 @@
 package com.example.medicationtracker;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import android.app.Dialog;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -19,23 +15,18 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.medicationtracker.dialogs.ExpandedDialog;
+import com.example.medicationtracker.dialogs.TimeListDialog;
 import com.example.medicationtracker.objects.ConsumptionInstance;
-import com.example.medicationtracker.objects.ConsumptionInstruction;
-import com.example.medicationtracker.objects.Drug;
 import com.example.medicationtracker.objects.Prescription;
-import com.example.medicationtracker.objects.TimeOfDay;
 import com.example.medicationtracker.database.DatabaseOpenHelper;
-import com.example.medicationtracker.receivers.AlarmReceiver;
-import com.example.medicationtracker.services.AlarmService;
+import com.example.medicationtracker.objects.SessionManager;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.GregorianCalendar;
 import java.util.List;
 
-import static com.example.medicationtracker.Utility.MILLIS_IN_DAY;
 import static com.example.medicationtracker.Utility.setAlarm;
 import static com.example.medicationtracker.Utility.cancelAlarm;
 import static com.example.medicationtracker.Utility.formatInt;
@@ -66,6 +57,27 @@ public class PrescriptionListActivity extends AppCompatActivity {
         lv_prescriptions = (ListView) findViewById(R.id.lv_prescriptions);
         PrescriptionsAdapter adapter = new PrescriptionsAdapter(this, prescriptions);
         lv_prescriptions.setAdapter(adapter);
+
+        /* used to refresh list every 15s
+        // needed because of deleted drugs
+        final Handler handler = new Handler();
+        handler.postDelayed( new Runnable() {
+
+            @Override
+            public void run() {
+                Log.d(Utility.TAG, "refreshing list");
+                updateListView();
+                handler.postDelayed(this, 15 * 1000);
+            }
+        }, 15 * 1000);
+        */
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshChronoList();
     }
 
     /*
@@ -121,7 +133,6 @@ public class PrescriptionListActivity extends AppCompatActivity {
                 latest += Utility.MILLIS_IN_DAY;
             }
         }
-        updateListView();
     }
 
     /*
@@ -131,11 +142,11 @@ public class PrescriptionListActivity extends AppCompatActivity {
      */
     private void refreshChronoList() {
         long now = System.currentTimeMillis();
-        while(!consumption_instances.isEmpty() && consumption_instances.get(0).getConsumptionTime().getTimeInMillis() <= now) {
+        while (!consumption_instances.isEmpty() && consumption_instances.get(0).getConsumptionTime().getTimeInMillis() <= now) {
             ConsumptionInstance top = consumption_instances.remove(0);
         }
 
-        for(Prescription p : this.prescriptions) {
+        for (Prescription p : this.prescriptions) {
             p.clean();
             db.updateDeleted(p);
         }
@@ -169,7 +180,7 @@ public class PrescriptionListActivity extends AppCompatActivity {
             ImageView iv_edit = (ImageView) convertView.findViewById(R.id.iv_edit);
             ImageView iv_delete = (ImageView) convertView.findViewById(R.id.iv_delete);
 
-            final Prescription p = prescriptions.get(position);
+            final Prescription p = getItem(position);
 
             tv_name.setText(p.getDrug().getName());
             tv_timing.setText(p.getTimingsString());
@@ -193,26 +204,48 @@ public class PrescriptionListActivity extends AppCompatActivity {
                         }
                     }
             );
+            iv_thumbnail.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onExpandClicked(p);
+                }
+            });
 
             return convertView;
         }
     }
 
     public void onEditClicked(Prescription p) {
-        Intent intent = new Intent(this, EditActivity.class);
-        intent.putExtra(EXTRA_KEY_ID, p.getId());
-        startActivityForResult(intent, REQUEST_CODE_EDIT);
+        SessionManager sm = new SessionManager(this);
+        if (sm.isLoggedIn()) {
+            Intent intent = new Intent(this, EditActivity.class);
+            intent.putExtra(EXTRA_KEY_ID, p.getId());
+            startActivityForResult(intent, REQUEST_CODE_EDIT);
+        } else {
+            Toast.makeText(this, "Please Login for Edit Privileges", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void onDeleteClicked(Prescription p) {
-        db.deletePrescription(p);
-        db.close();
+        SessionManager sm = new SessionManager(this);
+        if (sm.isLoggedIn()) {
+            db.deletePrescription(p);
+            db.close();
 
-        cancelAlarm(this, p);
+            cancelAlarm(this, p);
 
-        ArrayAdapter<Prescription> adapter = (ArrayAdapter<Prescription>) lv_prescriptions.getAdapter();
-        adapter.remove(p); // I am assuming that this.prescriptions is updated by adapter.remove
-        adapter.notifyDataSetChanged();
+            ArrayAdapter<Prescription> adapter = (ArrayAdapter<Prescription>) lv_prescriptions.getAdapter();
+            adapter.remove(p);
+            adapter.notifyDataSetChanged();
+        } else {
+            Toast.makeText(this, "Please Login for Edit Privileges", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void onExpandClicked(Prescription p) {
+        FragmentManager fm = getFragmentManager();
+        ExpandedDialog dialog = ExpandedDialog.newInstance(p.getId());
+        dialog.show(fm, ExpandedDialog.TAG);
     }
 
     private class CIAdapter extends ArrayAdapter<ConsumptionInstance> {
@@ -235,27 +268,27 @@ public class PrescriptionListActivity extends AppCompatActivity {
 
             tv_name.setText(ci.getDrug().getName());
             if (ci.isDeleted()) {
-                tv_name.setBackgroundColor(getResources().getColor(R.color.colorRed));
+                convertView.setBackgroundColor(getResources().getColor(R.color.colorRed));
             } else {
-                tv_name.setBackgroundColor(getResources().getColor(R.color.colorEmpty));
+                convertView.setBackgroundColor(getResources().getColor(R.color.colorEmpty));
             }
-            tv_time.setText(
-                    formatInt(ci.getConsumptionTime().get(Calendar.HOUR_OF_DAY), 2) +
-                    formatInt(ci.getConsumptionTime().get(Calendar.MINUTE), 2));
+            String time = formatInt(ci.getConsumptionTime().get(Calendar.HOUR_OF_DAY), 2) +
+                    formatInt(ci.getConsumptionTime().get(Calendar.MINUTE), 2);
+            tv_time.setText(time);
 
             // listener
-            tv_name.setOnClickListener(new View.OnClickListener() {
+            convertView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(ci.isDeleted()) {
+                    if (ci.isDeleted()) {
                         ci.setDeleted(false);
                         v.setBackgroundColor(getResources().getColor(R.color.colorEmpty));
                         //update prescription
-                        for(Prescription p : prescriptions) {
+                        for (Prescription p : prescriptions) {
                             if (p.getId() == ci.getId()) {
                                 long millis = ci.getConsumptionTime().getTimeInMillis();
                                 p.getDeleted().remove(millis);
-                                String msg = "restored : " + p.getDrug().getName() + millis;
+                                String msg = "restored : " + p.getDrug().getName() + " at " + Utility.timestampToString(millis);
                                 Toast.makeText(PrescriptionListActivity.this, msg, Toast.LENGTH_SHORT).show();
                                 setAlarm(v.getContext(), p);
 
@@ -266,11 +299,11 @@ public class PrescriptionListActivity extends AppCompatActivity {
                     } else {
                         ci.setDeleted(true);
                         v.setBackgroundColor(getResources().getColor(R.color.colorRed));
-                        for(Prescription p : prescriptions) {
+                        for (Prescription p : prescriptions) {
                             if (p.getId() == ci.getId()) {
                                 long millis = ci.getConsumptionTime().getTimeInMillis();
                                 p.getDeleted().add(millis);
-                                String msg = "deleted : " + p.getDrug().getName() + millis;
+                                String msg = "deleted : " + p.getDrug().getName() + " at " + Utility.timestampToString(millis);
                                 Toast.makeText(PrescriptionListActivity.this, msg, Toast.LENGTH_SHORT).show();
                                 setAlarm(v.getContext(), p);
 
@@ -298,7 +331,7 @@ public class PrescriptionListActivity extends AppCompatActivity {
 
         switch (requestCode) {
             case REQUEST_CODE_ADD:
-                if(resultCode == RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     long id = (Long) data.getExtras().get(EXTRA_KEY_ID);
                     new_p = db.getPrescription(id);
                     this.prescriptions.add(new_p);
@@ -326,96 +359,17 @@ public class PrescriptionListActivity extends AppCompatActivity {
         ListAdapter adapter = lv_prescriptions.getAdapter();
         if (adapter instanceof PrescriptionsAdapter) {
             ((PrescriptionsAdapter) adapter).notifyDataSetChanged();
-        } else if (adapter instanceof  CIAdapter) {
+        } else if (adapter instanceof CIAdapter) {
             ((CIAdapter) adapter).notifyDataSetChanged();
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //************************ LAND OF UNUSED FUNCTIONS **************
-
-
-    /*
-     * Sets an alarm for a ConsumptionInstance.
-     * The request code of the PendingIntent is the ID
-     */
-    private void setAlarmz(ConsumptionInstance instance) {
-        Calendar cal = instance.getConsumptionTime();
-
-        String timing = formatInt(cal.get(Calendar.HOUR_OF_DAY), 2) + formatInt(cal.get(Calendar.MINUTE), 2);
-        long alarm_millis = cal.getTimeInMillis();
-        long request_code = instance.getId();
-
-        // set Broadcast at specified time with request_code
-        //PendingIntent pending = getAlarmIntent(this, request_code, timing);
-        //AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-        //am.setExact(AlarmManager.RTC_WAKEUP, alarm_millis, pending);
-
-        Log.d("tag111", "(" + instance.getDrug().getName() + ") alarm set for " + timing + " at millis: " + alarm_millis);
-    }
-
-    /*
-     * Sets alarm for next ConsumptionInstance of Prescription
-     *
-     * Pre-conditions:
-     * Prescription must have a valid set of ConsumptionInstances
-     */
-    public static void setAlarmz(Context ctx, long id) {
-
-        Intent i = new Intent(ctx, AlarmService.class);
-        i.putExtra("REQUEST_CODE", id);
-        i.setAction(AlarmService.CREATE);
-        ctx.startService(i);
-
-        /* deprecated
-        ArrayList<ConsumptionInstance> instances = p.generateConsumptionInstances(0);
-        if (instances.size() > 0) { // must have at least 1 ConsumptionInstances
-            ConsumptionInstance first_instance = instances.get(0);
-            setAlarm(first_instance);
-        } else {
-            Log.e("error", "Error in setAlarms: empty consumption instances");
+    public Prescription getPrescription(long id) {
+        for(Prescription p : prescriptions) {
+            if (p.getId() == id) {
+                return p;
+            }
         }
-        */
+        return null;
     }
-
-    /*
-     * Cancels the alarm cycle for this prescription
-     */
-    private void cancelAlarms(Prescription p) {
-        Intent i = new Intent(this, AlarmService.class);
-        i.putExtra("REQUEST_CODE", p.getId());
-        i.setAction(AlarmService.CANCEL);
-        startService(i);
-
-        /* deprecated
-        // create exact same pendingIntent
-        PendingIntent pending = getAlarmIntent(this, p.getId(), "0000");
-        AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-
-        am.cancel(pending);
-
-        Log.d("tag111", "alarm canceled for " + p.getId());
-        */
-    }
-
-
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:weightSum="1">
@@ -11,58 +12,65 @@
         android:layout_height="50dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        app:srcCompat="@drawable/edit" />
+        android:padding="10dp"
+        app:srcCompat="@drawable/edit"
+        tools:ignore="ContentDescription" />
 
     <ImageView
         android:id="@+id/iv_delete"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:padding="10dp"
         android:layout_alignParentEnd="true"
         android:layout_below="@id/iv_edit"
-        app:srcCompat="@drawable/delete" />
+        app:srcCompat="@drawable/delete"
+        tools:ignore="ContentDescription" />
 
     <ImageView
         android:id="@+id/iv_thumbnail"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="@dimen/list_thumbnail_size"
+        android:layout_height="@dimen/list_thumbnail_size"
         android:layout_alignBottom="@+id/iv_delete"
         android:layout_toStartOf="@+id/iv_delete"
-        app:srcCompat="@mipmap/ic_launcher" />
+        app:srcCompat="@mipmap/ic_launcher"
+        tools:ignore="ContentDescription" />
 
     <TextView
         android:id="@+id/tv_name"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
+        android:layout_height="@dimen/list_text_size"
         android:text="TextView"
-        android:textColor="@android:color/black" />
+        android:textColor="@android:color/black"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
 
     <TextView
-        android:id="@+id/tv_timing"
+        android:id="@+id/tv_dosage"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/list_text_size"
         android:layout_alignParentStart="true"
         android:layout_below="@id/tv_name"
         android:textColor="@android:color/black"
         android:text="TextView" />
 
     <TextView
-        android:id="@+id/tv_dosage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_below="@id/tv_timing"
-        android:textColor="@android:color/black"
-        android:text="TextView" />
-
-    <TextView
         android:id="@+id/tv_remarks"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@id/tv_dosage"
+        android:layout_height="@dimen/list_text_size"
         android:text="TextView"
-        android:textColor="@android:color/black" />
+        android:textColor="@android:color/black"
+        android:layout_below="@id/tv_dosage"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:id="@+id/tv_timing"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/list_text_size"
+        android:textColor="@android:color/black"
+        android:text="TextView"
+        android:layout_below="@id/tv_remarks"
+        android:layout_alignParentStart="true" />
+
+
 
 </RelativeLayout>

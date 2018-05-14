@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@color/pale_blue">
 
     <TextView
         android:id="@+id/layout_timings_tv"
@@ -9,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:text="Timings"
+        android:text="@string/label_timings"
         android:textColor="@android:color/black"
         android:textSize="24sp" />
 
@@ -24,24 +25,27 @@
         android:id="@+id/layout_timings_btn_add"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ADD"
+        android:text="@string/btn_add"
         android:layout_below="@id/layout_timings_lv"
-        android:layout_alignStart="@id/layout_timings_lv" />
+        android:layout_alignStart="@id/layout_timings_lv"
+        style="@style/Green_button"/>
 
     <Button
         android:id="@+id/layout_timings_btn_clear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="CLEAR"
+        android:text="@string/btn_clear"
         android:layout_below="@id/layout_timings_lv"
-        android:layout_alignEnd="@id/layout_timings_lv" />
+        android:layout_alignEnd="@id/layout_timings_lv"
+        style="@style/Red_button"/>
 
     <Button
         android:id="@+id/layout_timings_btn_save"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SAVE"
+        android:text="@string/btn_save"
         android:layout_below="@id/layout_timings_btn_add"
-        android:layout_alignStart="@id/layout_timings_btn_add" />
+        android:layout_alignStart="@id/layout_timings_btn_add"
+        style="@style/Green_button"/>
 
 </RelativeLayout>

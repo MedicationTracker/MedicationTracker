@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -8,45 +9,80 @@
     android:paddingTop="16dp"
     android:paddingBottom="16dp">
 
-        // create my medications button
     <Button
         android:id="@+id/my_medications"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/Main_button_width"
         android:layout_height="wrap_content"
-        android:text="My Medications"
+        android:text="@string/btn_medications"
         android:onClick="onClickMedications"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
+        style="@style/Green_button"
         />
 
-    // create my history button
     <Button
         android:id="@+id/my_history"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/Main_button_width"
         android:layout_height="wrap_content"
-        android:text="My History"
         android:layout_below="@+id/my_medications"
         android:layout_centerHorizontal="true"
-        />
+        android:onClick="onClickHistory"
+        android:text="@string/btn_history"
+        style="@style/Green_button"/>
 
-    // create next appointment text
-    <EditText
-        android:id="@+id/next_appointment"
+    <TextView
+        android:id="@+id/tv_next_appt_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
         android:layout_below="@+id/my_history"
-        android:inputType="textPersonName"
-        android:text="Next appointment in :" />
+        android:layout_alignStart="@id/my_history"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="12dp"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:text="@string/label_next_appt" />
 
-    // create emergency call button
-    <Button
-        android:id="@+id/emergency_call"
+    <ImageButton
+        android:id="@+id/iv_edit_appt"
+        android:contentDescription="@string/default_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onEditClicked"
+        app:srcCompat="@drawable/calendar"
+        android:layout_below="@+id/my_history"
+        android:layout_toEndOf="@+id/tv_next_appt_date"
+        android:backgroundTint="@color/pale_blue"/>
+
+    <EditText
+        android:id="@+id/et_next_appt_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_below="@+id/next_appointment"
-        android:text="Emergency Call" />
+        android:focusable="false"
+        android:layout_below="@+id/tv_next_appt_date"
+        tools:ignore="LabelFor" />
+
+    <TextView
+        android:id="@+id/tv_next_appt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_next_appt_date"
+        android:layout_alignStart="@id/my_history"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="12dp"
+        android:text="@string/label_in"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
+
+    <EditText
+        android:id="@+id/et_next_appt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:focusable="false"
+        android:layout_below="@+id/tv_next_appt"
+        tools:ignore="LabelFor" />
 
 
 </RelativeLayout>

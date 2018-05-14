@@ -4,8 +4,9 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="colorRed">#FF0000</color>
-    <color name="colorEmpty">#FFFFFF</color>
+    <color name="colorEmpty">#FFCDFF</color>
 
+    <!-- Login and Registration -->
     <color name="bg_login">#26ae90</color>
     <color name="bg_register">#2e3237</color>
     <color name="bg_main">#428bca</color>
@@ -19,4 +20,8 @@
     <color name="btn_login_bg">#eceef1</color>
     <color name="lbl_name">#333333</color>
     <color name="btn_logut_bg">#ff6861</color>
+
+    <color name="healthy_pink">#ff6868</color>
+    <color name="positive_green">#0CF598</color>
+    <color name="pale_blue">#C5F1F7</color>
 </resources>

@@ -10,53 +10,43 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 
-import static android.R.id.list;
 import static com.example.medicationtracker.Utility.stringToLongArray;
 import static com.example.medicationtracker.Utility.stringToTimeOfDayArray;
 import static com.example.medicationtracker.Utility.timeOfDayArrayToString;
 
-/**
- * Created by Jia Hao on 5/31/2017.
- */
 
 public class Prescription {
-    long id = 0; //default value for id. id is assigned when storing into db.
-    GregorianCalendar start_date; //used to store the DD/MM/YYYY. the HH:MM field is not used
-    int interval;
-    ArrayList<TimeOfDay> timings;
-    Drug drug;
-    ConsumptionInstruction consumption_instruction;
-    ArrayList<Long> deleted;
+    private long id = 0; //default value for id. id is assigned when storing into db.
+    private GregorianCalendar start_date; //used to store the DD/MM/YYYY. the HH:MM field is not used
+    private int interval;
+    private ArrayList<TimeOfDay> timings;
+    private Drug drug;
+    private ConsumptionInstruction consumption_instruction;
+    private ArrayList<Long> deleted;
 
-    // default values
-    public Prescription() {
-
-    }
-
-    public Prescription(GregorianCalendar start_date, int interval, ArrayList<TimeOfDay> timings,
-                         Drug drug, ConsumptionInstruction ci, ArrayList<Long> deleted) {
-        this.start_date = start_date;
-        this.interval = interval;
-        this.timings = timings;
-        this.drug = drug;
-        this.consumption_instruction = ci;
-        this.deleted = deleted;
-    }
-
-    public Prescription(long id, GregorianCalendar start_date, int interval, ArrayList<TimeOfDay> timings,
-                        Drug drug, ConsumptionInstruction ci, ArrayList<Long> deleted) {
-        this.id = id;
-        this.start_date = start_date;
-        this.interval = interval;
-        this.timings = timings;
-        this.drug = drug;
-        this.consumption_instruction = ci;
-        this.deleted = deleted;
-    }
+//    public Prescription(GregorianCalendar start_date, int interval, ArrayList<TimeOfDay> timings,
+//                         Drug drug, ConsumptionInstruction ci, ArrayList<Long> deleted) {
+//        this.start_date = start_date;
+//        this.interval = interval;
+//        this.timings = timings;
+//        this.drug = drug;
+//        this.consumption_instruction = ci;
+//        this.deleted = deleted;
+//    }
+//    public Prescription(long id, GregorianCalendar start_date, int interval, ArrayList<TimeOfDay> timings,
+//                        Drug drug, ConsumptionInstruction ci, ArrayList<Long> deleted) {
+//        this.id = id;
+//        this.start_date = start_date;
+//        this.interval = interval;
+//        this.timings = timings;
+//        this.drug = drug;
+//        this.consumption_instruction = ci;
+//        this.deleted = deleted;
+//    }
 
     /*
-    constructor which uses raw inputs
-    dont need to make the objects by yourself
+     * constructor which uses raw inputs
+     * dont need to make the objects by yourself
      */
     public Prescription(long id, String drug_name, Bitmap drug_thumbnail, String dosage, String remarks,
                         long millis, int interval, String timings, String deleted_string) {
@@ -89,7 +79,7 @@ public class Prescription {
 
                 if (start_time <= millis && millis < end_time) {
                     ConsumptionInstance ci = new ConsumptionInstance(this.id, (GregorianCalendar) c.clone(),
-                            this.drug, this.consumption_instruction);
+                            this.drug);
                     if (deleted.contains(millis)) {
                         ci.setDeleted(true);
                     }
@@ -107,18 +97,22 @@ public class Prescription {
         GregorianCalendar c = (GregorianCalendar) this.start_date.clone();
         long now_millis = new GregorianCalendar().getTimeInMillis();
         Collections.sort(this.timings);
-        while (true) {
-            for(TimeOfDay t : timings) {
-                c.set(Calendar.HOUR_OF_DAY, Integer.valueOf(t.getHour()));
-                c.set(Calendar.MINUTE, Integer.valueOf(t.getMinute()));
-                long millis = c.getTimeInMillis();
+        if (this.timings.size() <= 0) {
+            return null;
+        } else {
+            while (true) {
+                for (TimeOfDay t : timings) {
+                    c.set(Calendar.HOUR_OF_DAY, Integer.valueOf(t.getHour()));
+                    c.set(Calendar.MINUTE, Integer.valueOf(t.getMinute()));
+                    long millis = c.getTimeInMillis();
 
-                if (now_millis < millis && !this.deleted.contains(millis)) {
-                    return new ConsumptionInstance(this.id, c, this.drug, this.consumption_instruction);
+                    if (now_millis < millis && !this.deleted.contains(millis)) {
+                        return new ConsumptionInstance(this.id, c, this.drug);
+                    }
                 }
-            }
 
-            c.add(Calendar.DAY_OF_MONTH, this.interval);
+                c.add(Calendar.DAY_OF_MONTH, this.interval);
+            }
         }
     }
 
@@ -143,31 +137,22 @@ public class Prescription {
     public void setId(long id) { this.id = id; }
 
     public GregorianCalendar getStartDate() { return this.start_date; }
-    public void setStartDate(GregorianCalendar c) { this.start_date = c; }
 
     public int getInterval() { return this.interval; }
-    public void setInterval(int interval) { this.interval = interval; }
 
     public ArrayList<TimeOfDay> getTimings() { return this.timings; }
     public String getTimingsString() {
         return timeOfDayArrayToString(this.timings);
     }
-    public void setTimings(ArrayList<TimeOfDay> timings) { this.timings = timings; }
 
     public Drug getDrug() { return this.drug; }
-    public void setDrug(Drug d) { this.drug = d; }
 
     public ConsumptionInstruction getConsumptionInstruction() { return this.consumption_instruction; }
-    public void setConsumptionInstruction(ConsumptionInstruction ci) { this.consumption_instruction = ci; }
 
     public ArrayList<Long> getDeleted() { return this.deleted; }
-    public void setDeleted(ArrayList<Long> deleted) { this.deleted = deleted; }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Prescription) {
-            return this.id == ((Prescription) obj).getId();
-        }
-        return false;
+        return obj instanceof Prescription && this.id == ((Prescription) obj).getId();
     }
 }

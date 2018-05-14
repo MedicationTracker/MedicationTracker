@@ -1,5 +1,6 @@
 package com.example.medicationtracker.dialogs;
 
+import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.TimePickerDialog;
 import android.content.Context;
@@ -21,13 +22,20 @@ import com.example.medicationtracker.R;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
 import static com.example.medicationtracker.Utility.formatInt;
 import static com.example.medicationtracker.Utility.stringToTimeOfDayArray;
+import static com.example.medicationtracker.Utility.timeOfDayArrayToString;
 
+/**
+ * Collects a ArrayList of TimeOfDay from the user
+ */
 
 public class TimeListDialog extends DialogFragment implements TimePickerDialog.OnTimeSetListener{
+    public static final String TAG_TIMELISTDIALOG = "TLD";
+
     ListView timings_dialog_lv;
     Button btn_add, btn_clear, btn_save;
     ArrayList<TimeOfDay> timings;
@@ -51,6 +59,10 @@ public class TimeListDialog extends DialogFragment implements TimePickerDialog.O
         View v = inflater.inflate(R.layout.layout_timings_dialog, container, false);
 
         timings = stringToTimeOfDayArray(getArguments().getString("timestring"));
+        if (savedInstanceState != null) {
+            String timings = (String) savedInstanceState.get("temp");
+            this.timings = stringToTimeOfDayArray(timings);
+        }
 
         timings_dialog_lv = (ListView) v.findViewById(R.id.layout_timings_lv);
         btn_add = (Button) v.findViewById(R.id.layout_timings_btn_add);
@@ -94,6 +106,7 @@ public class TimeListDialog extends DialogFragment implements TimePickerDialog.O
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         TimeOfDay tod = new TimeOfDay(formatInt(hourOfDay, 2), formatInt(minute, 2));
         timings.add(tod);
+        Collections.sort(timings);
         ArrayAdapter adapter = (ArrayAdapter) timings_dialog_lv.getAdapter();
         adapter.notifyDataSetChanged();
     }
@@ -119,7 +132,6 @@ public class TimeListDialog extends DialogFragment implements TimePickerDialog.O
                 convertView = getActivity().getLayoutInflater().inflate(R.layout.layout_time_list_dialog_items, parent, false);
             }
 
-            // convert to viewHolder pattern?
             TextView tv_name = (TextView) convertView.findViewById(R.id.layout_time_list_dialog_items_tv_name);
             ImageView iv_delete = (ImageView) convertView.findViewById(R.id.layout_time_list_dialog_items_iv_delete);
 
@@ -139,4 +151,21 @@ public class TimeListDialog extends DialogFragment implements TimePickerDialog.O
             return convertView;
         }
     }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("temp", timeOfDayArrayToString(this.timings));
+    }
+
+    @Override
+    public void onDestroyView() {
+        Dialog dialog = getDialog();
+        // handles https://code.google.com/p/android/issues/detail?id=17423
+        if (dialog != null && getRetainInstance()) {
+            dialog.setDismissMessage(null);
+        }
+        super.onDestroyView();
+    }
+
 }

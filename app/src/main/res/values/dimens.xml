@@ -2,4 +2,20 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <dimen name="list_thumbnail_size">100dp</dimen>
+    <dimen name="list_text_size">25dp</dimen>
+
+    <!-- Main -->
+    <dimen name="Main_button_width">200dp</dimen>
+    <dimen name="Main_text_height">25dp</dimen>
+
+    <!-- Custom Fragment Sizes -->
+    <dimen name="custom_fragment_width">250dp</dimen>
+    <dimen name="custom_fragment_height">400dp</dimen>
+
+    <!-- AlarmScreen -->
+    <dimen name="AlarmScreen_button_height">80dp</dimen>
+    <dimen name="AlarmScreen_button_width">130dp</dimen>
+    <dimen name="AlarmScreen_button_text_size">20sp</dimen>
 </resources>

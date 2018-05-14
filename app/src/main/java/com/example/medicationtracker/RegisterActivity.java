@@ -142,11 +142,9 @@ public class RegisterActivity extends Activity {
                         startActivity(intent);
                         finish();
                     } else {
-
                         // Error occurred in registration. Get the error
                         // message
                         String errorMsg = jObj.getString("error_msg");
-                        errorMsg = "fak";
                         Toast.makeText(getApplicationContext(),
                                 errorMsg, Toast.LENGTH_LONG).show();
                     }
@@ -161,7 +159,7 @@ public class RegisterActivity extends Activity {
             public void onErrorResponse(VolleyError error) {
                 Log.e(TAG, "Registration Error: " + error.getMessage());
                 Toast.makeText(getApplicationContext(),
-                        error.getMessage() + "cunt", Toast.LENGTH_LONG).show();
+                        error.getMessage(), Toast.LENGTH_LONG).show();
                 hideDialog();
             }
         }) {
